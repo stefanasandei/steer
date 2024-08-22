@@ -4,6 +4,7 @@ Separates each video into 1200 frames (1min @ 20fps). Parses the collected data
 into numpy archives.
 """
 
+from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 import cv2
 import os
@@ -17,15 +18,23 @@ def process_chunk(chunk_path: str):
     try:
         os.mkdir(f"{chunk_path}/processed")
     except:
-        print("Chunk already processed. Delete the processed dir to retry.")
+        print("Chunk already processed. Delete the 'processed' directory to retry.")
         return
 
-    for route_path in route_paths:
-        if route_path.find("processed") != -1:
-            continue
+    with ProcessPoolExecutor() as executor:
+        for route_path in route_paths:
+            if cfg["data"]["multiprocess_routes"]:
+                executor.submit(process_route, route_path, chunk_path)
+            else:
+                process_route(route_path, chunk_path)
 
-        route = Route(f"{chunk_path}/{route_path}")
-        route.save(f"{chunk_path}/processed/{route.get_name()}")
+
+def process_route(route_path: str, chunk_path: str):
+    if route_path.find("processed") != -1:
+        return
+
+    route = Route(f"{chunk_path}/{route_path}")
+    route.save(f"{chunk_path}/processed/{route.get_name()}")
 
 
 class Route:
@@ -57,7 +66,7 @@ class Route:
 
     def _load(self):
         if cfg["data"]["log"]:
-            print(f"Processing route {0}.")
+            print(f"Processing route {self.path}.")
 
         for segment in self.segments:
             seg_dir = f"{self.path}/{segment}"
@@ -123,7 +132,7 @@ class Route:
 
     def save(self, path: str):
         """Under the dir processed/{name}, it will save the following: can_telemetry.npz, frame.npz
-        and video/frame_{0, 1200}.jpeg"""
+        and video/{0, 1200}.jpeg"""
 
         if cfg["data"]["log"]:
             print(f"Saving to {path}")
@@ -156,17 +165,18 @@ class Route:
             video_path = f"{self.path}/{segment}/video.hevc"
 
             # for debug
-            max_frames = 1200 if not cfg["data"]["log"] else 20
+            data_debug = True
+            max_frames = 1200 if not data_debug else 20
             curr_frame = 0
 
-            cap = cv2.VideoCapture(str(video_path))
+            cap = cv2.VideoCapture(video_path)
             while cap.isOpened():
                 ret, frame = cap.read()
 
                 if ret and curr_frame <= max_frames:
                     # Zero pad frame_count and save frame
-                    img_path = f"{path}/video/{(str(frame_count).zfill(6) + '.jpg')}"
-                    cv2.imwrite(str(img_path), frame)
+                    img_path = f"{path}/video/{(str(frame_count).zfill(6) + '.jpeg')}"
+                    cv2.imwrite(img_path, frame)
 
                     frame_count += 1
                     curr_frame += 1
