@@ -19,7 +19,7 @@ def dataset_present(root_path: str) -> bool:
 
 
 def download_dataset(root_path: str, num_chunks=cfg["data"]["num_chunks"]):
-    for i in range(1, num_chunks+1):
+    for i in range(1, num_chunks + 1):
         if cfg["data"]["log"]:
             print(f"Started downloading chunk {i}.")
 
@@ -34,7 +34,11 @@ def download_chunk(root_path: str, chunk_num: int) -> str:
     zip_name = f"Chunk_{chunk_num}.zip"
 
     data_debug = True
-    url_root = "https://huggingface.co/datasets/commaai/comma2k19/resolve/main" if not data_debug else "http://127.0.0.1:5000/download"
+    url_root = (
+        "https://huggingface.co/datasets/commaai/comma2k19/resolve/main"
+        if not data_debug
+        else "http://127.0.0.1:5000/download"
+    )
 
     CHUNK_URL = f"{url_root}/{zip_name}"
     chunk_dir = f"{root_path}/{zip_name.split('.')[0]}"
