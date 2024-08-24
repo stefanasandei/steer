@@ -68,4 +68,13 @@ def download_chunk(root_path: str, chunk_num: int) -> str:
 
 def split_dataset(root_path: str):
     print(f"Splitting {root_path} dataset.")
-    pass
+
+    """
+    1. Grab all routes (randomized)
+    2. For each route choose the valid images
+    3. Concat all valid image frames into an array
+    4. Save the array with the image paths to a train.npz file ("frames")
+
+    In the dataset, based on the frame path grab the other data from the parent dir. 
+    Each frame is ordered, so we know the timestamp and what are the past and future frames.
+    """
