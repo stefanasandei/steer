@@ -18,11 +18,12 @@ import matplotlib.pyplot as plt
 
 class CommaDataset(Dataset):
 
-    def __init__(self, path: str, chunk_num: int, train: bool):
+    def __init__(self, path: str, chunk_num: int, train: bool, device: str):
         super().__init__()
 
         self.path = f"{path}/Chunk_{chunk_num}"
         self.frame_paths = []
+        self.device = device
 
         # make sure we have the dataset processed
         if not data.fetch.dataset_present(cfg["data"]["path"]):
@@ -38,7 +39,8 @@ class CommaDataset(Dataset):
         self.get_route_path = (
             lambda file_path: "/".join(file_path.rsplit("/", 2)[:-2]) + "/"
         )
-        self.get_id = lambda file_path: file_path.rsplit("/", 1)[-1].split(".")[0]
+        self.get_id = lambda file_path: file_path.rsplit(
+            "/", 1)[-1].split(".")[0]
 
         # just convert to tensor
         self.frame_transform = ToTensor()
@@ -63,11 +65,13 @@ class CommaDataset(Dataset):
 
         # convert positions to reference frame
         local_path = paths.get_local_path(positions, orientations, frame_id)
+        local_path = torch.tensor(
+            local_path, dtype=torch.float32, device=self.device)
 
         # divide data into previous and future arrays
-        future_path = local_path[frame_id + 1 : frame_id + 1 + future_seq_len]
+        future_path = local_path[frame_id + 1: frame_id + 1 + future_seq_len]
         past_path = local_path[
-            frame_id - past_seq_len : frame_id + 1
+            frame_id - past_seq_len: frame_id + 1
         ]  # also include the current path
 
         # 2. load past frames (including the current one as last)
@@ -78,14 +82,15 @@ class CommaDataset(Dataset):
             past_frames.append(self.frame_transform(frame))
 
         # Stack frames into single array, (T, C, H, W)
-        past_frames = torch.stack(past_frames)
+        past_frames = torch.stack(past_frames).to(self.device).float()
 
         # 3. load can data (speed & steering angle)
-        # todo: what's up with these shapes? (1200, 2)
         # todo: maybe return past_seq_len can data?
         can_data = np.load(f"{route_path}can_telemetry.npz")
-        speed = can_data["speed"][frame_id]
-        steering_angle = can_data["angle"][frame_id]
+        speed = torch.tensor(
+            can_data["speed"][frame_id], device=self.device, dtype=torch.float32)
+        steering_angle = torch.tensor(
+            can_data["angle"][frame_id], device=self.device, dtype=torch.float32)
 
         return {
             "past_frames": past_frames,  # (T, C, W, H)
