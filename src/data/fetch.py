@@ -117,6 +117,7 @@ def select_frames(routes: str) -> list[str]:
     frame_results = []
 
     # for each route choose valid images
+    # todo: might be buggy
     with ProcessPoolExecutor() as executor:
         frame_paths = executor.map(
             good_frames_from_route,

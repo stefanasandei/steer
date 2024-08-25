@@ -142,18 +142,17 @@ class Route:
         # save CAN data
         np.savez_compressed(
             f"{path}/can_telemetry.npz",
-            {"speed": self.synced_speed_value, "angle": self.synced_angle_value},
+            speed=self.synced_speed_value,
+            angle=self.synced_angle_value,
         )
 
         # save frame data
         np.savez_compressed(
             f"{path}/frame.npz",
-            {
-                "t": self.frame_t,
-                "position": self.frame_pos,
-                "velocity": self.frame_vel,
-                "orientation": self.frame_ori,
-            },
+            t=self.frame_t,
+            position=self.frame_pos,
+            velocity=self.frame_vel,
+            orientation=self.frame_ori,
         )
 
         # save video frames
