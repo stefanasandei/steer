@@ -87,7 +87,7 @@ class Route:
             # read frame data
             frame_dir = f"{seg_dir}/global_pose"
 
-            frame_t_array = np.load(f"{frame_dir}/frame_gps_times")
+            frame_t_array = np.load(f"{frame_dir}/frame_times")
             self.frame_t.append(frame_t_array)
 
             frame_pos_array = np.load(f"{frame_dir}/frame_positions")
