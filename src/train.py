@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
+import torch.amp as amp
 
 import matplotlib.pyplot as plt
 import time
@@ -16,47 +17,46 @@ epochs = 10
 learning_rate = 1e-3
 log_interval = 10
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 torch.manual_seed(seed)
 
 # data
 train_dataset = CommaDataset(
-    cfg["data"]["path"], chunk_num=1, train=True, device=device)
-train_dataloader = DataLoader(
-    train_dataset, batch_size=batch_size, shuffle=True)
+    cfg["data"]["path"], chunk_num=1, train=True, device=device
+)
+train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
-torch.set_float32_matmul_precision('high')
+torch.set_float32_matmul_precision("high")
 
 # model
 model = PilotNet().to(device)
 
 # training
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
-scaler = torch.cuda.amp.GradScaler()
-scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-    optimizer, 'min', patience=2)
+scaler = amp.GradScaler(device=device)
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min", patience=2)
 
 lossi = []
 t0 = time.time()
 
-for epoch in range(epochs+1):
+for epoch in range(epochs + 1):
     model.train()
 
     epoch_loss = 0
     epoch_time = 0
+    avg_loss = 0
 
     for train_features, train_labels in train_dataloader:
         # forward pass
-        with torch.cuda.amp.autocast():
-            y_hat = model(train_features["past_frames"],
-                          train_features["past_path"])
+        with amp.autocast(device_type=device):
+            y_hat = model(train_features["past_frames"], train_features["past_path"])
 
-            loss_path = F.mse_loss(
-                y_hat["future_path"], train_labels["future_path"])
-            loss_angle = F.mse_loss(y_hat["steering_angle"],
-                                    train_labels["steering_angle"])
-            loss_speed = F.mse_loss(y_hat["speed"], train_labels["speed"])
+            loss_path = F.mse_loss(y_hat["future_path"], train_labels["future_path"])
+            loss_angle = F.mse_loss(
+                y_hat["steering_angle"], train_labels["steering_angle"]
+            )
+            loss_speed = F.mse_loss(y_hat["speed"], train_labels["speed"])  # todo
 
             loss = loss_path + loss_angle + loss_speed
 
@@ -72,7 +72,7 @@ for epoch in range(epochs+1):
         lossi.append(loss.item())
         epoch_loss += loss.item()
         t1 = time.time()
-        epoch_time += (t1-t0)
+        epoch_time += t1 - t0
         t0 = t1
 
     scheduler.step(avg_loss)

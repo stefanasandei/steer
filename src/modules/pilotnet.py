@@ -10,7 +10,11 @@ from config import cfg
 class PilotNet(nn.Module):
     """an end-to-end network to predict steering angles"""
 
-    def __init__(self, num_past_frames=cfg["model"]["past_steps"]+1, num_future_steps=cfg["model"]["future_steps"]):
+    def __init__(
+        self,
+        num_past_frames=cfg["model"]["past_steps"] + 1,
+        num_future_steps=cfg["model"]["future_steps"],
+    ):
         super().__init__()
 
         self.num_future_steps = num_future_steps
@@ -19,14 +23,10 @@ class PilotNet(nn.Module):
         self.conv1 = nn.Conv2d(
             in_channels=num_past_frames * 3, out_channels=24, kernel_size=5, stride=2
         )
-        self.conv2 = nn.Conv2d(
-            in_channels=24, out_channels=36, kernel_size=5, stride=2)
-        self.conv3 = nn.Conv2d(
-            in_channels=36, out_channels=48, kernel_size=5, stride=2)
-        self.conv4 = nn.Conv2d(
-            in_channels=48, out_channels=64, kernel_size=3, stride=1)
-        self.conv5 = nn.Conv2d(
-            in_channels=64, out_channels=64, kernel_size=3, stride=1)
+        self.conv2 = nn.Conv2d(in_channels=24, out_channels=36, kernel_size=5, stride=2)
+        self.conv3 = nn.Conv2d(in_channels=36, out_channels=48, kernel_size=5, stride=2)
+        self.conv4 = nn.Conv2d(in_channels=48, out_channels=64, kernel_size=3, stride=1)
+        self.conv5 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1)
 
         # Fully connected layers for combining features and predicting outputs
         self.fc1 = nn.LazyLinear(100)
@@ -42,7 +42,8 @@ class PilotNet(nn.Module):
 
     def forward(self, past_frames, past_xyz):
         past_frames = past_frames.view(
-            past_frames.shape[0], -1, past_frames.shape[3], past_frames.shape[4])
+            past_frames.shape[0], -1, past_frames.shape[3], past_frames.shape[4]
+        )
 
         # Process the past frames with CNN layers
         x = F.relu(self.conv1(past_frames))
@@ -69,7 +70,11 @@ class PilotNet(nn.Module):
         steering = self.fc_steering(x)
         speed = self.fc_speed(x)
 
-        return {"future_path": future_path, "steering_angle": steering.squeeze(), "speed": speed.squeeze()}
+        return {
+            "future_path": future_path,
+            "steering_angle": steering.squeeze(),
+            "speed": speed.squeeze(),
+        }
 
 
 # ex shapes: past_frames: (8, past_frames*3, 66, 200); past_cyz: (8, past_frames, 3)
