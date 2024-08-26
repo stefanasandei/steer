@@ -3,6 +3,8 @@ Vectorized functions that transform between
 rotation matrices, euler angles and quaternions.
 All support lists, array or array of arrays as inputs.
 Supports both x2y and y_from_x format (y_from_x preferred!).
+
+Licensed under MIT, credit: https://github.com/commaai/comma2k19
 """
 
 import numpy as np
@@ -204,7 +206,8 @@ def ecef_euler_from_ned(ned_ecef_init, ned_pose):
     z0 = array([0, 0, 1])
 
     psi = np.arctan2(inner(x3, y0), inner(x3, x0))
-    theta = np.arctan2(-inner(x3, z0), np.sqrt(inner(x3, x0) ** 2 + inner(x3, y0) ** 2))
+    theta = np.arctan2(-inner(x3, z0), np.sqrt(inner(x3, x0)
+                       ** 2 + inner(x3, y0) ** 2))
     y2 = rot(z0, psi).dot(y0)
     z2 = rot(y2, theta).dot(z0)
     phi = np.arctan2(inner(y3, z2), inner(y3, y2))
@@ -285,7 +288,8 @@ def ecef2car(car_ecef, psi, theta, points_ecef, ned_converter):
     # convert points to NED
     points_ned = []
     for p in points_ecef:
-        points_ned.append(ned_converter.ecef2ned_matrix.dot(array(p) - car_ecef))
+        points_ned.append(
+            ned_converter.ecef2ned_matrix.dot(array(p) - car_ecef))
 
     points_ned = np.vstack(points_ned).T
 

@@ -1,6 +1,8 @@
 """
 Coordinate transformation module. All methods accept arrays as input
 with each row as a position.
+
+Licensed under MIT, credit: https://github.com/commaai/comma2k19
 """
 
 import numpy as np
@@ -80,8 +82,10 @@ class LocalCoord(object):
         lat, lon, _ = (np.pi / 180) * np.array(init_geodetic)
         self.ned2ecef_matrix = np.array(
             [
-                [-np.sin(lat) * np.cos(lon), -np.sin(lon), -np.cos(lat) * np.cos(lon)],
-                [-np.sin(lat) * np.sin(lon), np.cos(lon), -np.cos(lat) * np.sin(lon)],
+                [-np.sin(lat) * np.cos(lon), -np.sin(lon), -
+                 np.cos(lat) * np.cos(lon)],
+                [-np.sin(lat) * np.sin(lon), np.cos(lon), -
+                 np.cos(lat) * np.sin(lon)],
                 [np.cos(lat), 0, -np.sin(lat)],
             ]
         )

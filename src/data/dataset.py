@@ -13,8 +13,6 @@ import data.fetch
 from config import cfg
 import lib.paths as paths
 
-import matplotlib.pyplot as plt
-
 
 class CommaDataset(Dataset):
 

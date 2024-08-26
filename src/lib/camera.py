@@ -1,3 +1,7 @@
+""""
+Licensed under MIT, credit: https://github.com/commaai/comma2k19
+"""
+
 import numpy as np
 import lib.orientation as orient
 

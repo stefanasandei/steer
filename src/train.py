@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 # hyperparameters
 seed = 42
 batch_size = 16
-max_steps = 200
+max_steps = 20
 learning_rate = 1e-3
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -46,7 +46,7 @@ for step in range(max_steps):
 
     loss = loss_path + loss_angle + loss_speed
 
-    if step % 10 == 0:
+    if step % 1 == 0:
         print(f"step {step}; loss={loss.item():.2f}")
     lossi.append(loss.item())
 

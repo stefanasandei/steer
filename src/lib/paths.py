@@ -1,3 +1,8 @@
+""""
+Utility function to help compute local paths from global ones.
+Licensed under MIT, credit: https://github.com/commaai/comma2k19
+"""
+
 import numpy as np
 import cv2
 import plotly.express as px
@@ -81,7 +86,8 @@ def smooth_path(path):
 
     # Reconcat
     smooth_path = np.concatenate(
-        (x_fine[:, np.newaxis], y_fine[:, np.newaxis], z_fine[:, np.newaxis]), axis=1
+        (x_fine[:, np.newaxis], y_fine[:, np.newaxis],
+         z_fine[:, np.newaxis]), axis=1
     )
 
     return smooth_path
