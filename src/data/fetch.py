@@ -108,7 +108,8 @@ def split_chunk(chunk_dir: str):
     val_routes = routes[split:]
 
     if cfg["data"]["log"]:
-        print(f"train: {len(train_routes)} routes; val: {len(val_routes)} routes")
+        print(
+            f"train: {len(train_routes)} routes; val: {len(val_routes)} routes")
 
     train_files = select_frames(train_routes)
     val_files = select_frames(val_routes)
