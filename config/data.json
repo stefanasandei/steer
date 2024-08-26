@@ -1,7 +1,9 @@
 {
   "path": "./comma2k19",
   "num_chunks": 1,
+  "split": 0.8,
+
   "multiprocess_routes": false,
   "log": true,
-  "split": 0.8
+  "debug": true
 }

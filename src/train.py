@@ -3,7 +3,6 @@ from torch.utils.data import DataLoader
 import torch.nn.functional as F
 import torch.amp as amp
 
-import matplotlib.pyplot as plt
 import time
 
 from data.dataset import CommaDataset
@@ -56,7 +55,7 @@ for epoch in range(epochs + 1):
             loss_angle = F.mse_loss(
                 y_hat["steering_angle"], train_labels["steering_angle"]
             )
-            loss_speed = F.mse_loss(y_hat["speed"], train_labels["speed"])  # todo
+            loss_speed = F.mse_loss(y_hat["speed"], train_labels["speed"])
 
             loss = loss_path + loss_angle + loss_speed
 
@@ -80,7 +79,3 @@ for epoch in range(epochs + 1):
     # logging
     avg_loss = epoch_loss / len(train_dataloader)
     print(f"epoch {epoch}; loss={avg_loss:.4f}; time={epoch_time*1000:.2f}ms")
-
-
-plt.plot(lossi)
-plt.show()

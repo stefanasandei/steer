@@ -164,8 +164,7 @@ class Route:
             video_path = f"{self.path}/{segment}/video.hevc"
 
             # for debug
-            data_debug = True
-            max_frames = 1200 if not data_debug else 20
+            max_frames = 1200 if not cfg["data"]["debug"] else 20
             curr_frame = 0
 
             cap = cv2.VideoCapture(video_path)

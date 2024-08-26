@@ -43,7 +43,7 @@ def download_chunk(root_path: str, chunk_num: int) -> str:
     data_debug = True
     url_root = (
         "https://huggingface.co/datasets/commaai/comma2k19/resolve/main"
-        if not data_debug
+        if not cfg["data"]["debug"]
         else "http://127.0.0.1:5000/download"
     )
 
@@ -53,6 +53,8 @@ def download_chunk(root_path: str, chunk_num: int) -> str:
     # download the zip
     response = requests.get(CHUNK_URL, stream=True)
     total_size = int(response.headers.get("Content-Length", 0))
+    downloaded_size = 0
+
     with open(zip_name, "wb") as f, tqdm(
         unit="B",
         total=total_size,
@@ -64,7 +66,13 @@ def download_chunk(root_path: str, chunk_num: int) -> str:
             if not zip_chunk:
                 continue
             size = f.write(zip_chunk)
+
             bar.update(size)
+            downloaded_size += size
+
+    if downloaded_size < total_size:
+        print("Failed to download the chunk. Check if the URL is correct.")
+        exit(0)
 
     # extract it
     shutil.unpack_archive(zip_name, root_path)
@@ -117,14 +125,22 @@ def select_frames(routes: str) -> list[str]:
     frame_results = []
 
     # for each route choose valid images
-    # todo: might be buggy
-    with ProcessPoolExecutor() as executor:
-        frame_paths = executor.map(
-            good_frames_from_route,
-            routes,
-            itertools.repeat(cfg["model"]["future_steps"]),
-            itertools.repeat(cfg["model"]["past_steps"]),
-        )
+    if cfg["data"]["multiprocess_routes"]:
+        with ProcessPoolExecutor() as executor:
+            frame_paths = executor.map(
+                good_frames_from_route,
+                routes,
+                itertools.repeat(cfg["model"]["future_steps"]),
+                itertools.repeat(cfg["model"]["past_steps"]),
+            )
+    else:
+        frame_paths = []
+        for route in routes:
+            frame_paths.append(
+                good_frames_from_route(
+                    route, cfg["model"]["future_steps"], cfg["model"]["past_steps"]
+                )
+            )
 
     # merge all the frame paths from all routes
     for res in frame_paths:
