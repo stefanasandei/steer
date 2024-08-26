@@ -15,6 +15,6 @@ To start training the model:
 python3 ./src/train.py
 ```
 
-## kicense
+## license
 
 [Apache 2](LICENSE) © 2024 [Asandei Stefan-Alexandru](https://asandei.com). All rights reserved.

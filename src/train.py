@@ -2,17 +2,19 @@ import torch
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 
+import matplotlib.pyplot as plt
+import time
+
 from data.dataset import CommaDataset
 from config import cfg
 from modules.pilotnet import PilotNet
-
-import matplotlib.pyplot as plt
 
 # hyperparameters
 seed = 42
 batch_size = 16
 max_steps = 20
 learning_rate = 1e-3
+log_interval = 10
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -34,8 +36,9 @@ optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 train_features, train_labels = next(iter(train_dataloader))
 
 lossi = []
+t0 = time.time()
 
-for step in range(max_steps):
+for step in range(max_steps+1):
     # forward pass
     y_hat = model(train_features["past_frames"], train_features["past_path"])
 
@@ -46,14 +49,21 @@ for step in range(max_steps):
 
     loss = loss_path + loss_angle + loss_speed
 
-    if step % 1 == 0:
-        print(f"step {step}; loss={loss.item():.2f}")
-    lossi.append(loss.item())
-
     # backward pass
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
+
+    # timing & logging
+    lossi.append(loss.item())
+
+    t1 = time.time()
+    dt = t1 - t0
+    t0 = t1
+
+    if step % log_interval == 0:
+        print(f"step {step}; loss={loss.item():.2f}; time={dt*1000:.2f}ms")
+
 
 plt.plot(lossi)
 plt.show()
