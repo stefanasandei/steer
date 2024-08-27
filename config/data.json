@@ -2,8 +2,11 @@
   "path": "./comma2k19",
   "num_chunks": 1,
   "split": 0.8,
-
   "multiprocess_routes": false,
   "log": true,
-  "debug": true
+  "debug": true,
+  "stats": {
+    "project": "steer",
+    "dataset": "comma2k19"
+  }
 }

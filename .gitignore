@@ -9,3 +9,6 @@ test
 comma2k19
 
 .DS_Store
+
+.vscode
+wandb
