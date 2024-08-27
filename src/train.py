@@ -13,7 +13,7 @@ seed = 42
 batch_size = 16
 epochs = 10
 learning_rate = 1e-3
-log_interval = 10
+eval_iters = 10
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -23,19 +23,47 @@ torch.manual_seed(seed)
 train_dataset = CommaDataset(
     cfg["data"]["path"], chunk_num=1, train=True, device=device
 )
-train_dataloader = DataLoader(
-    train_dataset, batch_size=batch_size, shuffle=True)
+val_dataset = CommaDataset(cfg["data"]["path"], chunk_num=1, train=False, device=device)
+train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
 
 torch.set_float32_matmul_precision("high")
 
 # model
 model = PilotNet().to(device)
 
+
+# get val loss after one epoch of training
+@torch.no_grad()
+def estimate_loss():
+    val_loss = 0
+
+    model.eval()
+
+    for idx, (train_features, train_labels) in enumerate(val_dataloader):
+        if idx == eval_iters:
+            break
+
+        with amp.autocast(device_type=device):
+            y_hat = model(train_features["past_frames"], train_features["past_path"])
+
+            loss_path = F.mse_loss(y_hat["future_path"], train_labels["future_path"])
+            loss_angle = F.mse_loss(
+                y_hat["steering_angle"], train_labels["steering_angle"]
+            )
+            loss_speed = F.mse_loss(y_hat["speed"], train_labels["speed"])
+            loss = loss_path + loss_angle + loss_speed
+
+        val_loss += loss.item()
+
+    model.train()
+    return val_loss / eval_iters
+
+
 # training
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 scaler = amp.GradScaler(device=device)
-scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-    optimizer, "min", patience=2)
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min", patience=2)
 
 stats = Stats("debug0", epochs)
 
@@ -48,11 +76,9 @@ for epoch in range(epochs + 1):
     for train_features, train_labels in train_dataloader:
         # forward pass
         with amp.autocast(device_type=device):
-            y_hat = model(train_features["past_frames"],
-                          train_features["past_path"])
+            y_hat = model(train_features["past_frames"], train_features["past_path"])
 
-            loss_path = F.mse_loss(
-                y_hat["future_path"], train_labels["future_path"])
+            loss_path = F.mse_loss(y_hat["future_path"], train_labels["future_path"])
             loss_angle = F.mse_loss(
                 y_hat["steering_angle"], train_labels["steering_angle"]
             )
@@ -69,7 +95,7 @@ for epoch in range(epochs + 1):
         scaler.update()
 
         # timing and stats
-        stats.track(loss=loss.item())
+        stats.track_step(loss=loss.item())
         epoch_loss += loss.item()
 
     avg_loss = epoch_loss / len(train_dataloader)
@@ -77,3 +103,4 @@ for epoch in range(epochs + 1):
 
     # logging
     print(f"epoch {epoch}; loss={avg_loss:.4f}")
+    stats.track_epoch(loss=estimate_loss(), lr=scheduler.get_last_lr()[0])
