@@ -24,12 +24,19 @@ def dataset_present(root_path: str) -> bool:
     return len(os.listdir(root_path)) > 0
 
 
-def download_dataset(root_path: str, num_chunks=cfg["data"]["num_chunks"]):
+def download_dataset(
+    root_path: str, num_chunks=cfg["data"]["num_chunks"], skip_download=False
+):
     for i in range(1, num_chunks + 1):
         if cfg["data"]["log"]:
             print(f"Started downloading chunk {i}.")
 
-        chunk_dir = download_chunk(root_path, chunk_num=i)
+        if not skip_download:
+            chunk_dir = download_chunk(root_path, chunk_num=i)
+        else:
+            zip_name = f"Chunk_{i}.zip"
+            chunk_dir = f"{root_path}/{zip_name.split('.')[0]}"
+
         process_chunk(chunk_dir)
         split_chunk(chunk_dir)
 
@@ -40,7 +47,6 @@ def download_dataset(root_path: str, num_chunks=cfg["data"]["num_chunks"]):
 def download_chunk(root_path: str, chunk_num: int) -> str:
     zip_name = f"Chunk_{chunk_num}.zip"
 
-    data_debug = True
     url_root = (
         "https://huggingface.co/datasets/commaai/comma2k19/resolve/main"
         if not cfg["data"]["debug"]
@@ -108,8 +114,7 @@ def split_chunk(chunk_dir: str):
     val_routes = routes[split:]
 
     if cfg["data"]["log"]:
-        print(
-            f"train: {len(train_routes)} routes; val: {len(val_routes)} routes")
+        print(f"train: {len(train_routes)} routes; val: {len(val_routes)} routes")
 
     train_files = select_frames(train_routes)
     val_files = select_frames(val_routes)
