@@ -37,23 +37,15 @@ class Stats:
         # won't be accurate for the first step yolo
         self.t0 = time.time()
 
-    # to be called every step
-    def track_step(self, loss: float):
+    def track_iter(self, loss: float, val_loss=0.0):
         t1 = time.time()
         dt = t1 - self.t0
         self.t0 = t1
 
-        data = {"train/loss": loss, "time/step": dt * 1000}  # ms
+        data = {"loss/train": loss, "time/step": dt * 1000}  # ms
 
-        if self.enabled:
-            # send data to wandb
-            wandb.log(data)
-
-    # after one epoch during training
-    def track_epoch(self, loss: float, lr: float):
-        data = {"val/loss": loss, "learning_rate": lr}
-
-        self.best_loss = min(self.best_loss, loss)
+        if val_loss != 0.0:
+            data["loss/val"] = val_loss
 
         if self.enabled:
             # send data to wandb
