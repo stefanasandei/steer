@@ -37,7 +37,9 @@ comma2k19 (todo: the actual text)
 
 ## training
 
-trained on an h100
+**model** | **loss** | **steps** | **batch size** | **frames ctx** |  **GPU**
+:--------:|:--------:|:---------:|:--------------:|:--------------:|:--------:
+ PilotNet |  269.12  |    600    |       16       |      3/30      | RTX A4000
 
 ## license
 
