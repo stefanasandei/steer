@@ -158,7 +158,9 @@ class Route:
         # save video frames
         os.mkdir(f"{path}/video")
 
+        # each video will take 1200 frames
         frame_count = 0
+
         # For each segment, load in the frames and save each one to the images dir
         for segment in self.segments:
             video_path = f"{self.path}/{segment}/video.hevc"

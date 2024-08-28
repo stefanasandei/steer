@@ -4,6 +4,7 @@ __pycache__/
 
 *.npy
 *.npz
+*.pt
 
 test
 comma2k19

@@ -19,6 +19,7 @@ class Stats:
         self.conf_wandb = cfg["data"]["stats"]
         self.enabled = enabled
         self.best_loss = sys.float_info.max
+        self.architecture = architecture
 
         if self.enabled:
             # will request api key from stdin
