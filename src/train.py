@@ -23,8 +23,10 @@ torch.manual_seed(seed)
 train_dataset = CommaDataset(
     cfg["data"]["path"], chunk_num=1, train=True, device=device
 )
-val_dataset = CommaDataset(cfg["data"]["path"], chunk_num=1, train=False, device=device)
-train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+val_dataset = CommaDataset(
+    cfg["data"]["path"], chunk_num=1, train=False, device=device)
+train_dataloader = DataLoader(
+    train_dataset, batch_size=batch_size, shuffle=True)
 val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
 
 torch.set_float32_matmul_precision("high")
@@ -45,9 +47,11 @@ def estimate_loss():
             break
 
         with amp.autocast(device_type=device):
-            y_hat = model(train_features["past_frames"], train_features["past_path"])
+            y_hat = model(train_features["past_frames"],
+                          train_features["past_path"])
 
-            loss_path = F.mse_loss(y_hat["future_path"], train_labels["future_path"])
+            loss_path = F.mse_loss(
+                y_hat["future_path"], train_labels["future_path"])
             loss_angle = F.mse_loss(
                 y_hat["steering_angle"], train_labels["steering_angle"]
             )
@@ -60,10 +64,25 @@ def estimate_loss():
     return val_loss / eval_iters
 
 
+def save_checkpoint(val_loss: float, epoch: int):
+    print(f"Saving a checkpoint with val_loss={val_loss:.2f} on epoch {epoch}")
+
+    checkpoint = {
+        "model": model,
+        "optimizer": optimizer,
+        "scheduler": scheduler,
+        "epoch_num": epoch,
+        "val_loss": val_loss
+    }
+
+    torch.save(checkpoint, 'ckpt.pt')
+
+
 # training
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 scaler = amp.GradScaler(device=device)
-scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min", patience=2)
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+    optimizer, "min", patience=2)
 
 stats = Stats("debug0", epochs)
 
@@ -76,9 +95,11 @@ for epoch in range(epochs + 1):
     for train_features, train_labels in train_dataloader:
         # forward pass
         with amp.autocast(device_type=device):
-            y_hat = model(train_features["past_frames"], train_features["past_path"])
+            y_hat = model(train_features["past_frames"],
+                          train_features["past_path"])
 
-            loss_path = F.mse_loss(y_hat["future_path"], train_labels["future_path"])
+            loss_path = F.mse_loss(
+                y_hat["future_path"], train_labels["future_path"])
             loss_angle = F.mse_loss(
                 y_hat["steering_angle"], train_labels["steering_angle"]
             )
@@ -101,6 +122,10 @@ for epoch in range(epochs + 1):
     avg_loss = epoch_loss / len(train_dataloader)
     scheduler.step(avg_loss)
 
+    val_loss = estimate_loss()
+    if val_loss < stats.best_loss:
+        save_checkpoint(val_loss, epoch)
+
     # logging
     print(f"epoch {epoch}; loss={avg_loss:.4f}")
-    stats.track_epoch(loss=estimate_loss(), lr=scheduler.get_last_lr()[0])
+    stats.track_epoch(loss=val_loss, lr=scheduler.get_last_lr()[0])

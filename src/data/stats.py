@@ -4,6 +4,7 @@ Utility class to log stats to wandb. Used in training.
 
 import wandb
 import time
+import sys
 
 from config import cfg
 
@@ -17,6 +18,7 @@ class Stats:
     def __init__(self, architecture: str, epochs: int, enabled=True):
         self.conf_wandb = cfg["data"]["stats"]
         self.enabled = enabled
+        self.best_loss = sys.float_info.max
 
         if self.enabled:
             # will request api key from stdin
@@ -49,6 +51,8 @@ class Stats:
     # after one epoch during training
     def track_epoch(self, loss: float, lr: float):
         data = {"val/loss": loss, "learning_rate": lr}
+
+        self.best_loss = min(self.best_loss, loss)
 
         if self.enabled:
             # send data to wandb
