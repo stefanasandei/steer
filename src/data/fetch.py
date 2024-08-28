@@ -114,10 +114,14 @@ def split_chunk(chunk_dir: str):
     val_routes = routes[split:]
 
     if cfg["data"]["log"]:
-        print(f"train: {len(train_routes)} routes; val: {len(val_routes)} routes")
+        print(
+            f"train: {len(train_routes)} routes; val: {len(val_routes)} routes")
 
     train_files = select_frames(train_routes)
     val_files = select_frames(val_routes)
+
+    if len(val_files) == 0 or len(train_files) == 0:
+        print("Warning: the number of steps is too high, empty train/val files.")
 
     # save the array with the frame path
     with open(f"{chunk_dir}/train", "wb") as f:
