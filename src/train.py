@@ -13,12 +13,14 @@ from eval import get_val_loss
 seed = 42
 batch_size = 16
 learning_rate = 1e-3
-iters_num = 1000
+max_iters = 1000
 eval_iters = 10
 eval_interval = 100
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
+
 run_name = "debug0"
+out_dir = ".."
 
 torch.manual_seed(seed)
 
@@ -40,7 +42,7 @@ optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 scaler = amp.GradScaler(device=device)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min", patience=2)
 
-stats = Stats(run_name, epochs=int(len(train_dataset) / iters_num))
+stats = Stats(run_name, epochs=int(len(train_dataset) / max_iters))
 
 
 def save_checkpoint(val_loss: float, iter: int):
@@ -55,11 +57,14 @@ def save_checkpoint(val_loss: float, iter: int):
         "val_loss": val_loss,
     }
 
-    torch.save(checkpoint, "ckpt.pt")
+    torch.save(checkpoint, f"{out_dir}/ckpt.pt")
 
 
 model.train()
 for iter, (train_features, train_labels) in enumerate(train_dataloader):
+    if iter == max_iters:
+        break
+
     # forward pass
     with amp.autocast(device_type=device):
         y_hat = model(train_features["past_frames"], train_features["past_path"])
@@ -86,11 +91,11 @@ for iter, (train_features, train_labels) in enumerate(train_dataloader):
         if val_loss < stats.best_loss:
             save_checkpoint(val_loss, iter)
 
-        print(f"iter {iter}; loss={loss.item():.4f}; val_loss={val_loss:.4f}")
+        print(f"iter {iter}; train_loss={loss.item():.4f}; val_loss={val_loss:.4f}")
         stats.track_iter(loss=loss.item(), val_loss=val_loss)
     else:
         stats.track_iter(loss=loss.item())
 
 
-print(f"Finished training. Saving to {stats.architecture}.pt")
-torch.save(model.state_dict(), f"{stats.architecture}.pt")
+print(f"Finished training. Saving to {out_dir}/{stats.architecture}.pt")
+torch.save(model.state_dict(), f"{out_dir}/{stats.architecture}.pt")

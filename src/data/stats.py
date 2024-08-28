@@ -42,7 +42,7 @@ class Stats:
         dt = t1 - self.t0
         self.t0 = t1
 
-        data = {"loss/train": loss, "time/step": dt * 1000}  # ms
+        data = {"loss/train": loss, "time": dt * 1000}  # ms
 
         if val_loss != 0.0:
             data["loss/val"] = val_loss
