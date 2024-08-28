@@ -2,9 +2,13 @@
   "path": "./comma2k19",
   "num_chunks": 1,
   "split": 0.8,
-  "multiprocess_routes": false,
+
+  // only used when setting up
+  "multiprocess_routes": true,
   "log": true,
   "debug": false,
+  
+  // for wandb
   "stats": {
     "project": "steer",
     "dataset": "comma2k19"
