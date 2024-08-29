@@ -62,7 +62,7 @@ class Route:
         self.frame_ori = []
 
         full_size = np.array([1164, 874])
-        self.frame_size = full_size / 2
+        self.frame_size = full_size
 
         self._load()
         self._sync()
@@ -179,7 +179,8 @@ class Route:
                 if ret and curr_frame <= max_frames:
                     # downscale video frames to reduce vram and storage usage
                     resized = cv2.resize(
-                        frame, self.frame_size, interpolation=cv2.INTER_AREA)
+                        frame, self.frame_size, interpolation=cv2.INTER_AREA
+                    )
 
                     # Zero pad frame_count and save frame
                     img_path = f"{path}/video/{(str(frame_count).zfill(6) + '.jpeg')}"
