@@ -2,10 +2,14 @@
 Create a video using reference data or predictions.
 """
 
+from torchvision import transforms
 import cv2
 import numpy as np
 from tqdm import tqdm
+from PIL import Image
+import torch
 
+from lib.paths import get_local_path
 from lib.drawing import draw_debug_frame, draw_frame
 from modules.pilotnet import PilotNet
 from config import cfg
@@ -26,31 +30,51 @@ def create_debug_video(route_path: str, output_path: str):
     out.release()
 
 
+@torch.no_grad
 def create_video(route_path: str, output_path: str):
     # video writer
     fourcc = cv2.VideoWriter_fourcc(*"h264")
     out = cv2.VideoWriter(output_path, fourcc, 20.0, (1164, 874))
 
     # model
+    device = "cuda" if torch.cuda.is_available() else "mps"
     model = PilotNet(
         num_past_frames=cfg["model"]["past_steps"] + 1,
         num_future_steps=cfg["model"]["future_steps"],
-    )
+    ).to(device)
 
     # data
     frames = np.load(f"{route_path}/frame.npz")
+    positions, orientations = frames["position"], frames["orientation"]
+    trans = transforms.Compose([transforms.ToTensor()])
 
     for i in tqdm(
         range(cfg["model"]["past_steps"] + 1, 1200 - cfg["model"]["future_steps"])
     ):
         curr_frame = cv2.imread(f"{route_path}/video/{str(i).zfill(6)}.jpeg")
 
-        # todo
-        y_hat = model(past_frames=None, past_xyz=None)
+        # prepare past path
+        local_path = get_local_path(positions, orientations, i)
+        previous_path = local_path[i - cfg["model"]["past_steps"] : i + 1]
+        prev_path = torch.from_numpy(previous_path)
 
-        img = draw_frame(
-            curr_frame, y_hat["future_path"], y_hat["speed"], y_hat["steering_angle"]
-        )
+        # prepare past frames
+        frames = []
+        for f_id in range(i - cfg["model"]["past_steps"], i + 1):
+            frame = Image.open(f"{route_path}/video/{str(f_id).zfill(6)}.jpeg")
+            frames.append(trans(frame))
+        frames = torch.stack(frames)
+
+        frames = torch.unsqueeze(frames, 0).to(device)
+        prev_path = torch.unsqueeze(prev_path, 0).float().to(device)
+
+        y_hat = model(past_frames=frames, past_xyz=prev_path)
+
+        future_path = y_hat["future_path"].squeeze().detach().cpu().numpy()
+        speed = y_hat["speed"].squeeze().detach().cpu().numpy()
+        steering_angle = y_hat["steering_angle"].squeeze().detach().cpu().numpy()
+
+        img = draw_frame(curr_frame, future_path, speed, steering_angle)
 
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB, img)
         out.write(img)
@@ -59,6 +83,4 @@ def create_video(route_path: str, output_path: str):
 
 
 if __name__ == "__main__":
-    create_debug_video(
-        "./comma2k19/Chunk_1/processed/2018-08-02--08-34-47", "ref_video1.mp4"
-    )
+    create_video("./comma2k19/Chunk_1/processed/2018-08-02--08-34-47", "ref_video1.mp4")
