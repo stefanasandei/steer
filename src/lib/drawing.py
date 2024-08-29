@@ -50,6 +50,33 @@ def draw_path(img: np.ndarray, path: np.ndarray, shape_props={
         cv2.polylines(img, [pts], True, shape_props["line_color"])
 
 
+def draw_text(img: np.ndarray, text: str, origin: tuple[int, int]):
+    color = (255, 255, 255)
+    thickness = 6
+    font_scale = 2
+
+    length = len(text)*40
+    height = 30
+
+    # top-left & bottom-right
+    img = cv2.rectangle(
+        img, (origin[0]-20, origin[1]+height), (origin[0]+length, origin[1]-60), (0, 0, 0), -1)
+
+    # bottom-left
+    img = cv2.putText(img, text, origin,
+                      cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, thickness, cv2.LINE_AA)
+
+    return img
+
+
+def draw_frame(img: np.ndarray, path: np.ndarray, speed: float, steering_angle: float) -> np.ndarray:
+    draw_path(img, path)
+    img = draw_text(img, f"{speed:.1f} km/h", (50, 75))
+    img = draw_text(img, f"{steering_angle:.2f}", (950, 75))
+
+    return img
+
+
 def draw_debug_frame(frame_data: FrameData, route_path: str, index: int, duration: int) -> np.ndarray:
     """
     meant to index to data from the comma dataset
@@ -66,6 +93,8 @@ def draw_debug_frame(frame_data: FrameData, route_path: str, index: int, duratio
     img = cv2.imread(f'{route_path}/video/{str(index).zfill(6)}.jpeg')
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    draw_path(img, frame_positions_local[index+offset:index+duration+offset])
+    # todo get actual values
+    img = draw_frame(
+        img, frame_positions_local[index+offset:index+duration+offset], 25, 0)
 
     return img
