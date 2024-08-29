@@ -11,7 +11,7 @@
   
   // for wandb
   "stats": {
-    "project": "steer",
+    "project": "steer-v0", // change after it works to "steer"
     "dataset": "comma2k19"
   }
 }

@@ -100,3 +100,13 @@ class CommaDataset(Dataset):
             "steering_angle": steering_angle,  # (1,)
             "speed": speed,  # (1,)
         }
+
+
+# https://github.com/pytorch/pytorch/issues/23900
+def cycle(iterable):
+    iterator = iter(iterable)
+    while True:
+        try:
+            yield next(iterator)
+        except StopIteration:
+            iterator = iter(iterable)

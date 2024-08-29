@@ -74,15 +74,6 @@ class PilotNet(nn.Module):
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
 
-        # putputs
-        future_path = self.fc_future_path(x).view(
-            -1, self.num_future_steps, 3
-        )  # reshape to (N, 3)
-        steering = self.fc_steering(x)
-        speed = self.fc_speed(x)
-
-        return {
-            "future_path": future_path,
-            "steering_angle": steering.squeeze(),
-            "speed": speed.squeeze(),
-        }
+        # hidden state
+        # will be taken care of by the AV wrapper
+        return x

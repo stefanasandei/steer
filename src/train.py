@@ -4,30 +4,32 @@ import torch.nn.functional as F
 import torch.amp as amp
 
 from data.stats import Stats
-from data.dataset import CommaDataset
+from data.dataset import CommaDataset, cycle
 from config import cfg
-from modules.pilotnet import PilotNet
+from modules.model import PilotNet
 from eval import get_val_loss
 
 # hyperparameters
 seed = 42
-batch_size = 16
+batch_size = 32
 learning_rate = 1e-3
-max_iters = 1000
-eval_iters = 10
+eval_iters = 50
 eval_interval = 100
+max_iters = 20000  # about 5 epochs
+# dataset len is 147389, with batch size 16 it takes ~9000 iters
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-run_name = "debug0"
-out_dir = f"../runs/{run_name}"  # /workspace/runs/*
+run_name = "pilotnet"
+out_dir = f"../runs/{run_name}"  # save models in /workspace/runs/*
+# repo in /workspace/steer; dataset in /workspace/comma2k19
 
 torch.manual_seed(seed)
 
 # data
-train_dataset = CommaDataset(
+train_dataset = cycle(CommaDataset(
     cfg["data"]["path"], chunk_num=1, train=True, device=device
-)
+))
 val_dataset = CommaDataset(
     cfg["data"]["path"], chunk_num=1, train=False, device=device)
 train_dataloader = DataLoader(
@@ -37,14 +39,13 @@ val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
 torch.set_float32_matmul_precision("high")
 
 # model
-model = PilotNet(num_past_frames=cfg["model"]["past_steps"] + 1,
-                 num_future_steps=cfg["model"]["future_steps"]).to(device)
+model = PilotNet(device)
 
 # training
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 scaler = amp.GradScaler(device=device)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-    optimizer, "min", patience=2)
+    optimizer, "min", patience=20)
 
 stats = Stats(run_name, epochs=int(len(train_dataset) / max_iters))
 
@@ -70,15 +71,17 @@ for iter, (train_features, train_labels) in enumerate(train_dataloader):
         break
 
     # forward pass
-    with amp.autocast(device_type=device):
+    with amp.autocast(device_type=device, dtype=torch.bfloat16):
         y_hat = model(train_features["past_frames"],
                       train_features["past_path"])
 
+        # RMSE loss for the angle and speed
         loss_path = F.mse_loss(
             y_hat["future_path"], train_labels["future_path"])
-        loss_angle = F.mse_loss(
-            y_hat["steering_angle"], train_labels["steering_angle"])
-        loss_speed = F.mse_loss(y_hat["speed"], train_labels["speed"])
+        loss_angle = torch.sqrt(F.mse_loss(
+            y_hat["steering_angle"], train_labels["steering_angle"]))
+        loss_speed = torch.sqrt(F.mse_loss(
+            y_hat["speed"], train_labels["speed"]))
 
         loss = loss_path + loss_angle + loss_speed
 
@@ -86,7 +89,6 @@ for iter, (train_features, train_labels) in enumerate(train_dataloader):
     optimizer.zero_grad()
     scaler.scale(loss).backward()
     scaler.unscale_(optimizer)
-    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
     scaler.step(optimizer)
     scaler.update()
 
