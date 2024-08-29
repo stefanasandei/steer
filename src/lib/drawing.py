@@ -12,6 +12,10 @@ import lib.orientation as orient
 FrameData = TypedDict('FrameData', {
                       "t": np.ndarray, "position": np.ndarray, "orientation": np.ndarray})
 
+CANData = TypedDict("CANData", {
+    "speed": np.ndarray, "angle": np.ndarray
+})
+
 
 def draw_path(img: np.ndarray, path: np.ndarray, shape_props={
     "width": 1, "height": 1, "fill_color": (0, 128, 255), "line_color": (0, 255, 0)
@@ -70,14 +74,19 @@ def draw_text(img: np.ndarray, text: str, origin: tuple[int, int]):
 
 
 def draw_frame(img: np.ndarray, path: np.ndarray, speed: float, steering_angle: float) -> np.ndarray:
+    # draw future path
     draw_path(img, path)
+
+    # speed
     img = draw_text(img, f"{speed:.1f} km/h", (50, 75))
+
+    # steering angle
     img = draw_text(img, f"{steering_angle:.2f}", (950, 75))
 
     return img
 
 
-def draw_debug_frame(frame_data: FrameData, route_path: str, index: int, duration: int) -> np.ndarray:
+def draw_debug_frame(frame_data: FrameData, can_data: CANData, route_path: str, index: int, duration: int) -> np.ndarray:
     """
     meant to index to data from the comma dataset
     """
@@ -90,11 +99,15 @@ def draw_debug_frame(frame_data: FrameData, route_path: str, index: int, duratio
     frame_positions_local = np.einsum(
         'ij,kj->ki', local_from_ecef, frame_data["position"] - frame_data["position"][index])
 
+    target_frames = frame_positions_local[index+offset:index+duration+offset]
+
+    speed = can_data["speed"][index] * 3.6  # from m/s to km/h
+    angle = can_data["angle"][index]
+
     img = cv2.imread(f'{route_path}/video/{str(index).zfill(6)}.jpeg')
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     # todo get actual values
-    img = draw_frame(
-        img, frame_positions_local[index+offset:index+duration+offset], 25, 0)
+    img = draw_frame(img, target_frames, speed, angle)
 
     return img
