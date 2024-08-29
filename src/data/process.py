@@ -62,7 +62,7 @@ class Route:
         self.frame_ori = []
 
         full_size = np.array([1164, 874])
-        self.frame_size = full_size
+        self.frame_size = full_size // 2
 
         self._load()
         self._sync()

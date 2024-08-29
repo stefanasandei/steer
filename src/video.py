@@ -39,6 +39,9 @@ def create_video(route_path: str, output_path: str, model_path: str):
 
     # model
     device = "cuda" if torch.cuda.is_available() else "mps"
+
+    # todo this now needs a wrapper, will solve after training
+    exit(-1)
     model = PilotNet(
         num_past_frames=cfg["model"]["past_steps"] + 1,
         num_future_steps=cfg["model"]["future_steps"],
