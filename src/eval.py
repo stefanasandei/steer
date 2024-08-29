@@ -20,9 +20,11 @@ def get_val_loss(model: nn.Module, val_dataloader: DataLoader, eval_iters=10):
             break
 
         with amp.autocast(device_type=device):
-            y_hat = model(val_features["past_frames"], val_features["past_path"])
+            y_hat = model(val_features["past_frames"],
+                          val_features["past_path"])
 
-            loss_path = F.mse_loss(y_hat["future_path"], val_labels["future_path"])
+            loss_path = F.mse_loss(
+                y_hat["future_path"], val_labels["future_path"])
             loss_angle = F.mse_loss(
                 y_hat["steering_angle"], val_labels["steering_angle"]
             )
@@ -56,4 +58,4 @@ if __name__ == "__main__":
 
     model = torch.load(args.model, map_location=device)["model"]
 
-    print(get_val_loss(model, val_dataloader))
+    print(f"val_loss={get_val_loss(model, val_dataloader):.2f}")
