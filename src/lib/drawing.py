@@ -107,7 +107,6 @@ def draw_debug_frame(frame_data: FrameData, can_data: CANData, route_path: str, 
     img = cv2.imread(f'{route_path}/video/{str(index).zfill(6)}.jpeg')
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    # todo get actual values
     img = draw_frame(img, target_frames, speed, angle)
 
     return img
