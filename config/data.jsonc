@@ -1,5 +1,6 @@
 {
-  "path": "./comma2k19",
+  // /workspace/comma2k19
+  "path": "../comma2k19",
   "num_chunks": 1,
   "split": 0.8,
 

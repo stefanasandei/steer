@@ -20,7 +20,7 @@ eval_interval = 100
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 run_name = "debug0"
-out_dir = ".."
+out_dir = f"../runs/{run_name}"  # /workspace/runs/*
 
 torch.manual_seed(seed)
 
@@ -28,19 +28,23 @@ torch.manual_seed(seed)
 train_dataset = CommaDataset(
     cfg["data"]["path"], chunk_num=1, train=True, device=device
 )
-val_dataset = CommaDataset(cfg["data"]["path"], chunk_num=1, train=False, device=device)
-train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+val_dataset = CommaDataset(
+    cfg["data"]["path"], chunk_num=1, train=False, device=device)
+train_dataloader = DataLoader(
+    train_dataset, batch_size=batch_size, shuffle=True)
 val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
 
 torch.set_float32_matmul_precision("high")
 
 # model
-model = PilotNet().to(device)
+model = PilotNet(num_past_frames=cfg["model"]["past_steps"] + 1,
+                 num_future_steps=cfg["model"]["future_steps"]).to(device)
 
 # training
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 scaler = amp.GradScaler(device=device)
-scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min", patience=2)
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+    optimizer, "min", patience=2)
 
 stats = Stats(run_name, epochs=int(len(train_dataset) / max_iters))
 
@@ -67,10 +71,13 @@ for iter, (train_features, train_labels) in enumerate(train_dataloader):
 
     # forward pass
     with amp.autocast(device_type=device):
-        y_hat = model(train_features["past_frames"], train_features["past_path"])
+        y_hat = model(train_features["past_frames"],
+                      train_features["past_path"])
 
-        loss_path = F.mse_loss(y_hat["future_path"], train_labels["future_path"])
-        loss_angle = F.mse_loss(y_hat["steering_angle"], train_labels["steering_angle"])
+        loss_path = F.mse_loss(
+            y_hat["future_path"], train_labels["future_path"])
+        loss_angle = F.mse_loss(
+            y_hat["steering_angle"], train_labels["steering_angle"])
         loss_speed = F.mse_loss(y_hat["speed"], train_labels["speed"])
 
         loss = loss_path + loss_angle + loss_speed
@@ -91,7 +98,8 @@ for iter, (train_features, train_labels) in enumerate(train_dataloader):
         if val_loss < stats.best_loss:
             save_checkpoint(val_loss, iter)
 
-        print(f"iter {iter}; train_loss={loss.item():.4f}; val_loss={val_loss:.4f}")
+        print(
+            f"iter {iter}; train_loss={loss.item():.4f}; val_loss={val_loss:.4f}")
         stats.track_iter(loss=loss.item(), val_loss=val_loss)
     else:
         stats.track_iter(loss=loss.item())
