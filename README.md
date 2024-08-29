@@ -20,7 +20,7 @@ First of all, read and configure the option from `./config`. The `data.json` fil
 To download & preprocess the dataset, run:
 
 ```
-python3 ./src/setup.py
+python3 ./src/prepare.py
 ```
 
 To start training the model:
