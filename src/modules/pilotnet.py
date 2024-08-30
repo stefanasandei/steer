@@ -32,10 +32,17 @@ class PilotNet(nn.Module):
             in_channels=64, out_channels=64, kernel_size=3, stride=1)
 
         # merge image features with paths
-        # also "steering controller"
-        self.fc1 = nn.LazyLinear(100)
-        self.fc2 = nn.Linear(100, 50)
-        self.fc3 = nn.Linear(50, 10)
+        self.fc = nn.Sequential(
+            nn.LazyLinear(1024),
+            nn.ReLU(),
+            nn.Linear(1024, 512),
+            nn.ReLU(),
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Linear(256, 64),
+            nn.ReLU(),
+            nn.Linear(64, 16),
+        )
 
     def forward(self, past_frames, past_xyz):
         """
@@ -63,9 +70,7 @@ class PilotNet(nn.Module):
 
         # controller, give it more
         # time to "think" ;)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
+        x = self.fc(x)
 
         # hidden state
         # will be taken care of by the AV wrapper
