@@ -1,17 +1,12 @@
 {
-  // /workspace/comma2k19
   "path": "../comma2k19",
   "num_chunks": 1,
   "split": 0.8,
-
-  // only used when setting up
   "multiprocess_routes": true,
   "log": true,
   "debug": false,
-  
-  // for wandb
   "stats": {
-    "project": "steer-v0", // change after it works to "steer"
+    "project": "steer-v0",
     "dataset": "comma2k19"
   }
 }

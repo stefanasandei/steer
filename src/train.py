@@ -28,9 +28,9 @@ out_dir = f"../runs/{run_name}"  # save models in /workspace/runs/*
 torch.manual_seed(seed)
 
 # data
-train_dataset = cycle(CommaDataset(
+train_dataset = CommaDataset(
     cfg["data"]["path"], chunk_num=1, train=True, device=device
-))
+)
 val_dataset = CommaDataset(
     cfg["data"]["path"], chunk_num=1, train=False, device=device)
 train_dataloader = DataLoader(
@@ -67,7 +67,7 @@ def save_checkpoint(val_loss: float, iter: int):
 
 
 model.train()
-for iter, (train_features, train_labels) in enumerate(train_dataloader):
+for iter, (train_features, train_labels) in enumerate(cycle(train_dataloader)):
     if iter == max_iters:
         break
 
