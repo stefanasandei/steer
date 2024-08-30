@@ -23,12 +23,14 @@ def get_val_loss(model: nn.Module, val_dataloader: DataLoader, device: str, eval
             y_hat = model(val_features["past_frames"],
                           val_features["past_path"])
 
+            # RMSE loss for the angle and speed
             loss_path = F.mse_loss(
                 y_hat["future_path"], val_labels["future_path"])
-            loss_angle = F.mse_loss(
-                y_hat["steering_angle"], val_labels["steering_angle"]
-            )
-            loss_speed = F.mse_loss(y_hat["speed"], val_labels["speed"])
+            loss_angle = torch.sqrt(F.mse_loss(
+                y_hat["steering_angle"], val_labels["steering_angle"]))
+            loss_speed = torch.sqrt(F.mse_loss(
+                y_hat["speed"], val_labels["speed"]))
+
             loss = loss_path + loss_angle + loss_speed
 
         val_loss += loss.item()

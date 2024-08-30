@@ -23,6 +23,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 run_name = "pilotnet"
 out_dir = f"../runs/{run_name}"  # save models in /workspace/runs/*
 # repo in /workspace/steer; dataset in /workspace/comma2k19
+# todo make sure out_dir (/workspace/runs/name/) is created
 
 torch.manual_seed(seed)
 
