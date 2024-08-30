@@ -15,7 +15,7 @@ batch_size = 64
 learning_rate = 5e-3
 eval_iters = 50
 eval_interval = 100
-max_iters = 20000  # about 5 epochs
+max_iters = 20000  # about 10 epochs
 # dataset len is 147389, with batch size 16 it takes ~9000 iters
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
