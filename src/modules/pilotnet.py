@@ -37,13 +37,6 @@ class PilotNet(nn.Module):
         self.fc2 = nn.Linear(100, 50)
         self.fc3 = nn.Linear(50, 10)
 
-        # output layers
-        self.fc_future_path = nn.Linear(
-            10, num_future_steps * 3
-        )  # predicting (x, y, z) for N future steps
-        self.fc_steering = nn.Linear(10, 1)  # steering angle in radians
-        self.fc_speed = nn.Linear(10, 1)  # speed in m/s
-
     def forward(self, past_frames, past_xyz):
         """
         past_frames: (B, T, C, W, H)

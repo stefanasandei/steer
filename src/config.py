@@ -24,4 +24,5 @@ for conf in os.listdir(cfg_path):
     cfg[conf_name] = {}
 
     with open(f"{cfg_path}/{conf}", "r") as f:
+        # todo: may not work
         cfg[conf_name] = json.load(f, cls=JSONWithCommentsDecoder)

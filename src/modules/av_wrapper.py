@@ -24,7 +24,7 @@ class AVWrapper(nn.Module):
         # Output layers
         self.out = nn.ModuleDict(
             {
-                "future_path": nn.Linear(
+                "future_path": nn.LazyLinear(
                     num_future_steps * 3
                 ),  # (x, y, z) for T future steps
                 "steering_angle": nn.LazyLinear(1),  # in radians
@@ -34,7 +34,7 @@ class AVWrapper(nn.Module):
 
     def forward(self, past_frames, past_xyz):
         # (B, H)
-        h = self.net(past_frames, past_frames)  # hidden state
+        h = self.net(past_frames, past_xyz)  # hidden state
 
         # (B, T, 3)
         future_path = self.out["future_path"](
