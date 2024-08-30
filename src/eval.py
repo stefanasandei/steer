@@ -10,7 +10,7 @@ from config import cfg
 
 
 @torch.no_grad()
-def get_val_loss(model: nn.Module, val_dataloader: DataLoader, eval_iters=10):
+def get_val_loss(model: nn.Module, val_dataloader: DataLoader, device: str, eval_iters=10):
     val_loss = 0
 
     model.eval()
@@ -58,4 +58,4 @@ if __name__ == "__main__":
 
     model = torch.load(args.model, map_location=device)["model"]
 
-    print(f"val_loss={get_val_loss(model, val_dataloader):.2f}")
+    print(f"val_loss={get_val_loss(model, val_dataloader, device):.2f}")

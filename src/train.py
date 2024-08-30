@@ -96,7 +96,7 @@ for iter, (train_features, train_labels) in enumerate(train_dataloader):
 
     # timing and stats
     if iter % eval_interval == 0:
-        val_loss = get_val_loss(model, val_dataloader)
+        val_loss = get_val_loss(model, val_dataloader, device)
         if val_loss < stats.best_loss:
             save_checkpoint(val_loss, iter)
 
