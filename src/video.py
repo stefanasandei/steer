@@ -8,6 +8,7 @@ import numpy as np
 from tqdm import tqdm
 from PIL import Image
 import torch
+import argparse
 
 from lib.paths import get_local_path
 from lib.drawing import draw_debug_frame, draw_frame
@@ -17,14 +18,13 @@ from config import cfg
 
 def create_debug_video(route_path: str, output_path: str):
     fourcc = cv2.VideoWriter_fourcc(*"h264")
-    out = cv2.VideoWriter(output_path, fourcc, 20.0, (1164, 874))
+    out = cv2.VideoWriter(output_path, fourcc, 20.0, (1164/2, 874/2))
 
     frames = np.load(f"{route_path}/frame.npz")
     can_data = np.load(f"{route_path}/can_telemetry.npz")
 
-    for i in tqdm(range(0, 1170)):
-        img = draw_debug_frame(
-            frames, can_data, route_path, index=i, duration=30)
+    for i in tqdm(range(0, 1200 - cfg["model"]["future_steps"])):
+        img = draw_debug_frame(frames, can_data, route_path, index=i, duration=30)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB, img)
         out.write(img)
 
@@ -35,7 +35,7 @@ def create_debug_video(route_path: str, output_path: str):
 def create_video(route_path: str, output_path: str, model_path: str):
     # video writer
     fourcc = cv2.VideoWriter_fourcc(*"h264")
-    out = cv2.VideoWriter(output_path, fourcc, 20.0, (1164, 874))
+    out = cv2.VideoWriter(output_path, fourcc, 20.0, (1164/2, 874/2))
 
     # model
     device = "cuda" if torch.cuda.is_available() else "mps"
@@ -49,15 +49,14 @@ def create_video(route_path: str, output_path: str, model_path: str):
     trans = transforms.Compose([transforms.ToTensor()])
 
     for i in tqdm(
-        range(cfg["model"]["past_steps"] + 1,
-              1200 - cfg["model"]["future_steps"])
+        range(cfg["model"]["past_steps"] + 1, 1200 - cfg["model"]["future_steps"])
     ):
         curr_frame = cv2.imread(f"{route_path}/video/{str(i).zfill(6)}.jpeg")
         curr_frame = cv2.cvtColor(curr_frame, cv2.COLOR_BGR2RGB)
 
         # prepare past path
         local_path = get_local_path(positions, orientations, i)
-        previous_path = local_path[i - cfg["model"]["past_steps"]: i + 1]
+        previous_path = local_path[i - cfg["model"]["past_steps"] : i + 1]
         prev_path = torch.from_numpy(previous_path)
 
         # prepare past frames
@@ -74,8 +73,7 @@ def create_video(route_path: str, output_path: str, model_path: str):
 
         future_path = y_hat["future_path"].squeeze().detach().cpu().numpy()
         speed = y_hat["speed"].squeeze().detach().cpu().numpy()
-        steering_angle = y_hat["steering_angle"].squeeze(
-        ).detach().cpu().numpy()
+        steering_angle = y_hat["steering_angle"].squeeze().detach().cpu().numpy()
 
         img = draw_frame(curr_frame, future_path, speed, steering_angle)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -85,6 +83,44 @@ def create_video(route_path: str, output_path: str, model_path: str):
 
 
 if __name__ == "__main__":
-    # todo bug, video not saved
-    create_video(
-        "../comma2k19/Chunk_1/processed/2018-08-02--08-34-47", "ref_video.mp4", "pilotnet2.pt")
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-m",
+        "--model",
+        type=str,
+        help="Path to the model weights. If not provided, will use dataset for ground truth.",
+        default="",
+        required=False,
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        help="Output path of the video.",
+        default="video.mp4",
+        required=False,
+    )
+    parser.add_argument(
+        "-r",
+        "--route",
+        type=str,
+        help="Route name",
+        default="2018-08-02--08-34-47",
+        required=False,
+    )
+
+    args = parser.parse_args()
+
+    route = f"{cfg["data"]["path"]}/Chunk_1/processed/{args.route}"
+    print(f"using route path: {route}")
+
+    if len(args.model) == 0:
+        print("Using dataset.")
+        create_debug_video(route, args.output)
+    else:
+        print("Using model predictions.")
+        create_video(
+            route,
+            args.output,
+            args.model,
+        )
