@@ -16,15 +16,16 @@ from modules.model import PilotNetWrapped
 from config import cfg
 
 
-def create_debug_video(route_path: str, output_path: str):
+def create_debug_video(route_path: str, output_path: str, max_frames=1200):
     fourcc = cv2.VideoWriter_fourcc(*"h264")
-    out = cv2.VideoWriter(output_path, fourcc, 20.0, (1164/2, 874/2))
+    out = cv2.VideoWriter(output_path, fourcc, 20.0, (1164, 874))
 
     frames = np.load(f"{route_path}/frame.npz")
     can_data = np.load(f"{route_path}/can_telemetry.npz")
 
-    for i in tqdm(range(0, 1200 - cfg["model"]["future_steps"])):
-        img = draw_debug_frame(frames, can_data, route_path, index=i, duration=30)
+    for i in tqdm(range(0, max_frames - cfg["model"]["future_steps"])):
+        img = draw_debug_frame(frames, can_data, route_path,
+                               index=i, duration=cfg["model"]["future_steps"])
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB, img)
         out.write(img)
 
@@ -32,10 +33,10 @@ def create_debug_video(route_path: str, output_path: str):
 
 
 @torch.no_grad
-def create_video(route_path: str, output_path: str, model_path: str):
+def create_video(route_path: str, output_path: str, model_path: str, max_frames=1200):
     # video writer
     fourcc = cv2.VideoWriter_fourcc(*"h264")
-    out = cv2.VideoWriter(output_path, fourcc, 20.0, (1164/2, 874/2))
+    out = cv2.VideoWriter(output_path, fourcc, 20.0, (1164, 874))
 
     # model
     device = "cuda" if torch.cuda.is_available() else "mps"
@@ -49,14 +50,15 @@ def create_video(route_path: str, output_path: str, model_path: str):
     trans = transforms.Compose([transforms.ToTensor()])
 
     for i in tqdm(
-        range(cfg["model"]["past_steps"] + 1, 1200 - cfg["model"]["future_steps"])
+        range(cfg["model"]["past_steps"] + 1,
+              max_frames - cfg["model"]["future_steps"])
     ):
         curr_frame = cv2.imread(f"{route_path}/video/{str(i).zfill(6)}.jpeg")
         curr_frame = cv2.cvtColor(curr_frame, cv2.COLOR_BGR2RGB)
 
         # prepare past path
         local_path = get_local_path(positions, orientations, i)
-        previous_path = local_path[i - cfg["model"]["past_steps"] : i + 1]
+        previous_path = local_path[i - cfg["model"]["past_steps"]: i + 1]
         prev_path = torch.from_numpy(previous_path)
 
         # prepare past frames
@@ -73,7 +75,8 @@ def create_video(route_path: str, output_path: str, model_path: str):
 
         future_path = y_hat["future_path"].squeeze().detach().cpu().numpy()
         speed = y_hat["speed"].squeeze().detach().cpu().numpy()
-        steering_angle = y_hat["steering_angle"].squeeze().detach().cpu().numpy()
+        steering_angle = y_hat["steering_angle"].squeeze(
+        ).detach().cpu().numpy()
 
         img = draw_frame(curr_frame, future_path, speed, steering_angle)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -111,7 +114,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    route = f"{cfg["data"]["path"]}/Chunk_1/processed/{args.route}"
+    route = f"{cfg['data']['path']}/Chunk_1/processed/{args.route}"
     print(f"using route path: {route}")
 
     if len(args.model) == 0:
