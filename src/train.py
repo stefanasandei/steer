@@ -11,8 +11,8 @@ from eval import get_val_loss
 
 # hyperparameters
 seed = 42
-batch_size = 32
-learning_rate = 1e-3
+batch_size = 64
+learning_rate = 5e-3
 eval_iters = 50
 eval_interval = 100
 max_iters = 20000  # about 5 epochs
