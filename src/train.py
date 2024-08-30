@@ -6,7 +6,7 @@ import torch.amp as amp
 from data.stats import Stats
 from data.dataset import CommaDataset, cycle
 from config import cfg
-from modules.model import PilotNet
+from modules.model import PilotNetWrapped
 from eval import get_val_loss
 
 # hyperparameters
@@ -39,7 +39,7 @@ val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
 torch.set_float32_matmul_precision("high")
 
 # model
-model = PilotNet(device)
+model = PilotNetWrapped(device)
 
 # training
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)

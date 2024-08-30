@@ -11,7 +11,7 @@ import torch
 
 from lib.paths import get_local_path
 from lib.drawing import draw_debug_frame, draw_frame
-from modules.model import PilotNet
+from modules.model import PilotNetWrapped
 from config import cfg
 
 
@@ -40,7 +40,7 @@ def create_video(route_path: str, output_path: str, model_path: str):
     # model
     device = "cuda" if torch.cuda.is_available() else "mps"
 
-    model = PilotNet(device)
+    model = PilotNetWrapped(device)
     model.load_state_dict(torch.load(model_path))
 
     # data

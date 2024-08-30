@@ -5,7 +5,7 @@ from modules.pilotnet import PilotNet
 from modules.av_wrapper import AVWrapper
 
 
-def PilotNet(device: str) -> nn.Module:
+def PilotNetWrapped(device: str) -> nn.Module:
     pilot = PilotNet(num_past_frames=cfg["model"]["past_steps"] + 1,
                      num_future_steps=cfg["model"]["future_steps"]).to(device)
 
