@@ -19,7 +19,7 @@ def get_val_loss(model: nn.Module, val_dataloader: DataLoader, eval_iters=10):
         if idx == eval_iters:
             break
 
-        with amp.autocast(device_type=device):
+        with amp.autocast(device_type=device, dtype=torch.bfloat16):
             y_hat = model(val_features["past_frames"],
                           val_features["past_path"])
 
