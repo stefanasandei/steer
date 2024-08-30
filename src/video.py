@@ -85,5 +85,6 @@ def create_video(route_path: str, output_path: str, model_path: str):
 
 
 if __name__ == "__main__":
+    # todo bug, video not saved
     create_video(
-        "./comma2k19/Chunk_1/processed/2018-08-02--08-34-47", "ref_video.mp4", "pilotnet-v0.pt")
+        "../comma2k19/Chunk_1/processed/2018-08-02--08-34-47", "ref_video.mp4", "pilotnet2.pt")

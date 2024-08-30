@@ -6,7 +6,7 @@
   "log": true,
   "debug": false,
   "stats": {
-    "project": "steer-v0",
+    "project": "steer",
     "dataset": "comma2k19"
   }
 }
