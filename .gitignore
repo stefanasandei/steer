@@ -13,5 +13,7 @@ comma2k19
 
 .vscode
 wandb
+weights
 
 *.mp4
+*.pt

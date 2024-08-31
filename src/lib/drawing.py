@@ -74,6 +74,9 @@ def draw_text(img: np.ndarray, text: str, origin: tuple[int, int]):
 
 
 def draw_frame(img: np.ndarray, path: np.ndarray, speed: float, steering_angle: float) -> np.ndarray:
+    img = cv2.resize(img, FULL_FRAME_SIZE,
+                     interpolation=cv2.INTER_LINEAR)
+
     # draw future path
     draw_path(img, path)
 

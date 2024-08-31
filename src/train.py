@@ -11,11 +11,11 @@ from eval import get_val_loss
 
 # hyperparameters
 seed = 42
-batch_size = 64
+batch_size = 128
 learning_rate = 5e-3
 eval_iters = 50
 eval_interval = 100
-max_iters = 20000  # about 10 epochs
+max_iters = 2000  # about 2 epochs
 # dataset len is 147389, with batch size 16 it takes ~9000 iters
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -68,7 +68,7 @@ def save_checkpoint(val_loss: float, iter: int):
 
 model.train()
 for iter, (train_features, train_labels) in enumerate(cycle(train_dataloader)):
-    if iter == max_iters:
+    if iter == max_iters+1:
         break
 
     # forward pass

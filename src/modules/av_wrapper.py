@@ -27,8 +27,10 @@ class AVWrapper(nn.Module):
                 "future_path": nn.LazyLinear(
                     num_future_steps * 3
                 ),  # (x, y, z) for T future steps
-                "steering_angle": nn.LazyLinear(1),  # in radians
-                "speed": nn.LazyLinear(1),  # in meters per second
+                # in radians
+                "steering_angle": nn.Sequential(nn.LazyLinear(64), nn.ReLU(), nn.Linear(64, 16), nn.ReLU(), nn.Linear(16, 1)),
+                # in meters per second
+                "speed": nn.Sequential(nn.LazyLinear(64), nn.ReLU(), nn.Linear(64, 16), nn.ReLU(), nn.Linear(16, 1)),
             }
         )
 
@@ -37,8 +39,8 @@ class AVWrapper(nn.Module):
         h = self.net(past_frames, past_xyz)  # hidden state
 
         # (B, T, 3)
-        future_path = self.out["future_path"](
-            h).view(-1, self.num_future_steps, 3)
+        future_path = self.out["future_path"](h)
+        future_path = future_path.view(-1, self.num_future_steps, 3)
 
         # (B, 1)
         steering = self.out["steering_angle"](h).squeeze()
