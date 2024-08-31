@@ -63,3 +63,13 @@ class PilotNet(nn.Module):
         # hidden state
         # will be taken care of by the AV wrapper
         return h
+
+
+# let's test the model
+if __name__ == "__main__":
+    B, T = 2, 3
+    past_frames = torch.randn((B, T, 3, 1164 // 2, 874 // 2))
+    past_xyz = torch.randn((B, T, 3))
+
+    model = PilotNet()
+    print(model(past_frames, past_xyz).shape)

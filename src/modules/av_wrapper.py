@@ -28,9 +28,11 @@ class AVWrapper(nn.Module):
                     num_future_steps * 3
                 ),  # (x, y, z) for T future steps
                 # in radians
-                "steering_angle": nn.Sequential(nn.LazyLinear(64), nn.ReLU(), nn.Linear(64, 16), nn.ReLU(), nn.Linear(16, 1)),
+                "steering_angle": nn.Sequential(
+                    nn.LazyLinear(64), nn.ReLU(), nn.Linear(64, 1)
+                ),
                 # in meters per second
-                "speed": nn.Sequential(nn.LazyLinear(64), nn.ReLU(), nn.Linear(64, 16), nn.ReLU(), nn.Linear(16, 1)),
+                "speed": nn.Sequential(nn.LazyLinear(64), nn.ReLU(), nn.Linear(64, 1)),
             }
         )
 
