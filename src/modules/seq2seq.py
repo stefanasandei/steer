@@ -9,8 +9,8 @@ class Seq2Seq(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.n_input = 125  # after xyz concat will be 128
-        self.n_output = 256
+        self.n_input = 253  # after xyz concat will be 256
+        self.n_output = 128
 
         self.encoder = Encoder(self.n_input)
         self.decoder = Decoder(self.n_input + 3, self.n_output)
@@ -37,7 +37,8 @@ class Seq2Seq(nn.Module):
 
         # merge frame feature with past path
         past_xyz = past_xyz.permute(1, 0, 2)  # (T, B, 3)
-        feature_seq = torch.cat((feature_seq, past_xyz), axis=2)  # (T, B, n_input+3)
+        feature_seq = torch.cat((feature_seq, past_xyz),
+                                axis=2)  # (T, B, n_input+3)
 
         # (B, n_output)
         model_output = self.decoder(feature_seq)

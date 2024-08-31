@@ -11,11 +11,11 @@ from eval import get_val_loss
 
 # hyperparameters
 seed = 42
-batch_size = 128
+batch_size = 64
 learning_rate = 5e-3
-eval_iters = 50
+eval_iters = 5
 eval_interval = 100
-max_iters = 2000  # about 2 epochs
+max_iters = 200  # about 2 epochs
 # dataset len is 147389, with batch size 16 it takes ~9000 iters
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -46,7 +46,7 @@ model = PilotNetWrapped(device)
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 scaler = amp.GradScaler(device=device)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-    optimizer, "min", patience=20)
+    optimizer, "min", patience=5)
 
 stats = Stats(run_name, epochs=int(len(train_dataset) / max_iters))
 
@@ -90,6 +90,7 @@ for iter, (train_features, train_labels) in enumerate(cycle(train_dataloader)):
     optimizer.zero_grad()
     scaler.scale(loss).backward()
     scaler.unscale_(optimizer)
+    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
     scaler.step(optimizer)
     scaler.update()
 
