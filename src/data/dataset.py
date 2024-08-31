@@ -37,8 +37,7 @@ class CommaDataset(Dataset):
         self.get_route_path = (
             lambda file_path: "/".join(file_path.rsplit("/", 2)[:-2]) + "/"
         )
-        self.get_id = lambda file_path: file_path.rsplit(
-            "/", 1)[-1].split(".")[0]
+        self.get_id = lambda file_path: file_path.rsplit("/", 1)[-1].split(".")[0]
 
         # just convert to tensor
         self.frame_transform = ToTensor()
@@ -63,13 +62,12 @@ class CommaDataset(Dataset):
 
         # convert positions to reference frame
         local_path = paths.get_local_path(positions, orientations, frame_id)
-        local_path = torch.tensor(
-            local_path, dtype=torch.float32, device=self.device)
+        local_path = torch.tensor(local_path, dtype=torch.float32, device=self.device)
 
         # divide data into previous and future arrays
-        future_path = local_path[frame_id + 1: frame_id + 1 + future_seq_len]
+        future_path = local_path[frame_id + 1 : frame_id + 1 + future_seq_len]
         past_path = local_path[
-            frame_id - past_seq_len: frame_id + 1
+            frame_id - past_seq_len : frame_id + 1
         ]  # also include the current path
 
         # 2. load past frames (including the current one as last)
@@ -91,6 +89,8 @@ class CommaDataset(Dataset):
         steering_angle = torch.tensor(
             can_data["angle"][frame_id], device=self.device, dtype=torch.float32
         ).squeeze()
+
+        # todo: normalize inputs
 
         return {
             "past_frames": past_frames,  # (T, C, W, H)
