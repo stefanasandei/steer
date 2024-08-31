@@ -32,6 +32,7 @@ class PilotNet(nn.Module):
             in_channels=64, out_channels=64, kernel_size=3, stride=1)
 
         # merge image features with paths
+        # will output the hidden state
         self.fc = nn.Sequential(
             nn.LazyLinear(1024),
             nn.ReLU(),
@@ -39,9 +40,7 @@ class PilotNet(nn.Module):
             nn.ReLU(),
             nn.Linear(512, 256),
             nn.ReLU(),
-            nn.Linear(256, 64),
-            nn.ReLU(),
-            nn.Linear(64, 16),
+            nn.Linear(256, 128),
         )
 
     def forward(self, past_frames, past_xyz):
@@ -70,8 +69,8 @@ class PilotNet(nn.Module):
 
         # controller, give it more
         # time to "think" ;)
-        x = self.fc(x)
+        h = self.fc(x)
 
         # hidden state
         # will be taken care of by the AV wrapper
-        return x
+        return h
