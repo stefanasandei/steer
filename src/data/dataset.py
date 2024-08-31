@@ -4,7 +4,7 @@ The dataset class used to access elements.
 
 import torch
 from torch.utils.data import Dataset
-from torchvision.transforms import ToTensor
+import torchvision.transforms as transforms
 import pickle
 import numpy as np
 from PIL import Image
@@ -37,10 +37,15 @@ class CommaDataset(Dataset):
         self.get_route_path = (
             lambda file_path: "/".join(file_path.rsplit("/", 2)[:-2]) + "/"
         )
-        self.get_id = lambda file_path: file_path.rsplit("/", 1)[-1].split(".")[0]
+        self.get_id = lambda file_path: file_path.rsplit(
+            "/", 1)[-1].split(".")[0]
 
         # just convert to tensor
-        self.frame_transform = ToTensor()
+        self.frame_transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225]),
+        ])
 
     def __len__(self):
         return len(self.frame_paths)
@@ -62,19 +67,23 @@ class CommaDataset(Dataset):
 
         # convert positions to reference frame
         local_path = paths.get_local_path(positions, orientations, frame_id)
-        local_path = torch.tensor(local_path, dtype=torch.float32, device=self.device)
+        local_path = torch.tensor(
+            local_path, dtype=torch.float32, device=self.device)
 
         # divide data into previous and future arrays
-        future_path = local_path[frame_id + 1 : frame_id + 1 + future_seq_len]
+        future_path = local_path[frame_id + 1: frame_id + 1 + future_seq_len]
         past_path = local_path[
-            frame_id - past_seq_len : frame_id + 1
+            frame_id - past_seq_len: frame_id + 1
         ]  # also include the current path
 
         # 2. load past frames (including the current one as last)
         past_frames = []
+
         for f_id in range(frame_id - past_seq_len, frame_id + 1):
             filename = str(f_id).zfill(6) + ".jpeg"
             frame = Image.open(f"{route_path}video/{filename}")
+
+            # apply transforms
             past_frames.append(self.frame_transform(frame))
 
         # Stack frames into single array, (T, C, H, W)
@@ -89,8 +98,6 @@ class CommaDataset(Dataset):
         steering_angle = torch.tensor(
             can_data["angle"][frame_id], device=self.device, dtype=torch.float32
         ).squeeze()
-
-        # todo: normalize inputs
 
         return {
             "past_frames": past_frames,  # (T, C, W, H)
