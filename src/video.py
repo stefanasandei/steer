@@ -41,8 +41,9 @@ def create_video(route_path: str, output_path: str, model_path: str, max_frames=
     # model
     device = "cuda" if torch.cuda.is_available() else "mps"
 
-    model = PilotNetWrapped(device)
-    model.load_state_dict(torch.load(model_path))
+    model = torch.load(model_path)
+    # model = PilotNetWrapped(device)
+    # model.load_state_dict(torch.load(model_path))
 
     # data
     frames = np.load(f"{route_path}/frame.npz")
