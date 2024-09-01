@@ -15,15 +15,14 @@ batch_size = 64
 learning_rate = 5e-3
 eval_iters = 5
 eval_interval = 100
-max_iters = 200  # about 2 epochs
+max_iters = 200
 # dataset len is 147389, with batch size 16 it takes ~9000 iters
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 run_name = "pilotnet"
-out_dir = f"../runs/{run_name}"  # save models in /workspace/runs/*
+out_dir = f"../runs/"  # save models in /workspace/runs/
 # repo in /workspace/steer; dataset in /workspace/comma2k19
-# todo make sure out_dir (/workspace/runs/name/) is created
 
 torch.manual_seed(seed)
 
@@ -63,7 +62,7 @@ def save_checkpoint(val_loss: float, iter: int):
         "val_loss": val_loss,
     }
 
-    torch.save(checkpoint, f"{out_dir}/ckpt.pt")
+    torch.save(checkpoint, f"{out_dir}/{stats.architecture}-ckpt.pt")
 
 
 model.train()
