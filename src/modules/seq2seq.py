@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from torchvision.models import RegNet_Y_32GF_Weights, regnet_y_32gf
+from torchvision.models import RegNet_Y_400MF_Weights, regnet_y_400mf
 
 
 class Seq2Seq(nn.Module):
@@ -58,8 +59,8 @@ class Encoder(nn.Module):
         self.n_feat = n_feat
 
         # only want to get features, without classes logits
-        self.feature_extractor = regnet_y_32gf(
-            weights=RegNet_Y_32GF_Weights.DEFAULT)
+        self.feature_extractor = regnet_y_400mf(
+            weights=RegNet_Y_400MF_Weights.DEFAULT)
         self.feature_extractor.fc = nn.Identity()
 
         self.fc = nn.LazyLinear(self.n_feat)

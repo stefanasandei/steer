@@ -42,6 +42,8 @@ class Stats:
         dt = t1 - self.t0
         self.t0 = t1
 
+        self.best_loss = max(self.best_loss, val_loss)
+
         data = {"loss/train": loss, "time": dt * 1000}  # ms
 
         if val_loss != 0.0:
