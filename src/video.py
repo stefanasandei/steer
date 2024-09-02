@@ -12,7 +12,7 @@ import argparse
 
 from lib.paths import get_local_path
 from lib.drawing import draw_debug_frame, draw_frame
-from modules.model import PilotNetWrapped
+from modules.model import PilotNetWrapped, Seq2SeqWrapped
 from config import cfg
 
 
@@ -41,9 +41,9 @@ def create_video(route_path: str, output_path: str, model_path: str, max_frames=
     # model
     device = "cuda" if torch.cuda.is_available() else "mps"
 
-    model = torch.load(model_path)
-    # model = PilotNetWrapped(device)
-    # model.load_state_dict(torch.load(model_path))
+    model = Seq2SeqWrapped(device)
+    model.load_state_dict(torch.load(model_path))
+    model.eval()
 
     # data
     frames = np.load(f"{route_path}/frame.npz")
