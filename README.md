@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-    open-source autonomous vehicle software&nbsp | <a href="https://asandei.com"> Website</a>&nbsp
+    open-source autonomous vehicle software&nbsp | <a href="https://asandei.com"> website</a>&nbsp
 <br>
 
 This repository contains training and inference code for the Steer family of models. These are end-to-end neural networks for self driving.
@@ -51,7 +51,9 @@ Debug information projected into a sample frame from the dataset.
 :--------:|:--------:|:---------:|:--------------:|:-------------:
  PilotNet |    -     |    500    |      128       |      3/30
  Seq2Seq  |    -     |    500    |       32       |      3/30
-  Steer   |    -     |    500    |      128       |      3/30
+**Steer** |    -     |    500    |      128       |      3/30
+
+The presented model is **Steer**, however for comparison, also PilotNet and Seq2Seq models have been developed.
 
 The first model is based on the PilotNet architecture. It has two main components: a series of convolutional layers and a series of feed forward layers, acting as a controller. The frames are concatanated and feed into the conv layers, after that the features are concatenated with the past path. The resulted tensor is then passed thru the linear layers, later branching into multiple linear output layers to create predictions. This model proved effective in roughly estimating the steering angle and the speed of the vehicle, however it presented poor results in predicting a future path. However, the model did understand to predict the vehicle will go (about) in the forward direction. This inability to predict the path can be caused by the lack of temporal features.
 
