@@ -13,6 +13,7 @@ import argparse
 from lib.paths import get_local_path
 from lib.drawing import draw_debug_frame, draw_frame
 from modules.model import PilotNetWrapped, Seq2SeqWrapped
+from modules.model import PilotNetWrapped, Seq2SeqWrapped
 from config import cfg
 
 

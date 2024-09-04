@@ -1,8 +1,12 @@
+"""
+Used for reference in the benchmarks.
+"""
+
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from torchvision.models import RegNet_Y_32GF_Weights, regnet_y_32gf
-from torchvision.models import RegNet_Y_400MF_Weights, regnet_y_400mf
+from torchvision.models import RegNet_Y_800MF_Weights, regnet_y_800mf
 
 
 class Seq2Seq(nn.Module):
@@ -10,11 +14,11 @@ class Seq2Seq(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.n_input = 253  # after xyz concat will be 256
-        self.n_output = 128
+        self.n_input = 512
+        self.n_output = 256
 
-        self.encoder = Encoder(self.n_input)
-        self.decoder = Decoder(self.n_input + 3, self.n_output)
+        self.encoder = Encoder(self.n_input - 3)
+        self.decoder = Decoder(self.n_input, self.n_output)
 
     def forward(self, past_frames, past_xyz):
         """
@@ -59,8 +63,8 @@ class Encoder(nn.Module):
         self.n_feat = n_feat
 
         # only want to get features, without classes logits
-        self.feature_extractor = regnet_y_400mf(
-            weights=RegNet_Y_400MF_Weights.DEFAULT)
+        self.feature_extractor = regnet_y_800mf(
+            weights=RegNet_Y_800MF_Weights.DEFAULT)
         self.feature_extractor.fc = nn.Identity()
 
         self.fc = nn.LazyLinear(self.n_feat)

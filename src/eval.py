@@ -7,9 +7,9 @@ import argparse
 
 from data.dataset import CommaDataset
 from config import cfg
+from modules.model import Seq2SeqWrapped, PilotNetWrapped
 
 
-@torch.no_grad()
 def get_val_loss(model: nn.Module, val_dataloader: DataLoader, device: str, eval_iters=10):
     val_loss = 0
 
@@ -58,6 +58,8 @@ if __name__ == "__main__":
     )
     val_dataloader = DataLoader(val_dataset, batch_size=2, shuffle=True)
 
-    model = torch.load(args.model, map_location=device)["model"]
+    model = Seq2SeqWrapped(device)
+    model.load_state_dict(torch.load(args.model))
+    model.eval()
 
     print(f"val_loss={get_val_loss(model, val_dataloader, device):.2f}")
