@@ -1,5 +1,4 @@
 """
-Used for reference in the benchmarks.
 """
 
 import torch
@@ -8,6 +7,7 @@ from torch.nn import functional as F
 
 
 class SteerNet(nn.Module):
+    """ """
 
     def __init__(
         self,
@@ -19,8 +19,21 @@ class SteerNet(nn.Module):
         past_frames: (B, T, C, W, H)
         past_xyz: (B, T, 3)
         """
+
         B = past_frames.shape[0]
+
         return torch.randn(B, 128)
+
+
+class VideoPatchEmbedding(nn.Module):
+    """
+    creates 3D patches from a video
+    """
+
+    def __init__(self, patch_size=16):
+        super().__init__()
+
+        # todo
 
 
 # let's test the model
