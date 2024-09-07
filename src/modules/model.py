@@ -26,11 +26,15 @@ def Seq2SeqWrapped(device: str) -> nn.Module:
     return model
 
 
-def SteerNetWrapped(device: str) -> nn.Module:
+def SteerNetWrapped(device: str, return_dict: bool = True) -> nn.Module:
     model = SteerNet().to(device)
 
-    model.compile()
-    model = AVWrapper(model).to(device)
-    # can't compile a model returning a dict
+    if return_dict:
+        model.compile()
+        model = AVWrapper(model, return_dict=True).to(device)
+        # can't compile a model returning a dict
+    else:
+        model = AVWrapper(model, return_dict=False)
+        model.compile()
 
     return model

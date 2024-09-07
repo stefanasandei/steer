@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.nn import functional as F
 from typing import Optional, TypedDict
 
 from config import cfg
@@ -72,22 +73,41 @@ class AVWrapper(nn.Module):
         # (B, 1)
         speed = self.out["speed"](h).squeeze()
 
-        # now compute loss
-        loss = None
-        if targets is not None:
-            # todo
-            loss = torch.tensor([0.0])
-
         # create result
         if self.return_dict:
-            result = {
+            pred = {
                 "future_path": future_path,
                 "steering_angle": steering,
                 "speed": speed,
             }
         else:
             new_row = torch.tensor([steering.item(), speed.item(), 0.0])
-            result = torch.cat((result, new_row), dim=1)
+            pred = torch.cat((future_path, new_row), dim=1)
+
+        # now compute loss
+        loss = None if targets is None else self._get_loss(pred, targets)
 
         # final return
-        return result, loss
+        return pred, loss
+
+    def _get_loss(self, y_hat, targets):
+        loss = None
+
+        if self.return_dict:
+            loss_future_path = F.mse_loss(
+                y_hat["future_path"], targets["future_path"])
+            loss_steering_angle = F.mse_loss(
+                y_hat["steering_angle"], targets["steering_angle"])
+            loss_speed = F.mse_loss(
+                y_hat["speed"], targets["speed"])
+        else:
+            loss_future_path = F.mse_loss(
+                y_hat[:, -1, :], targets[:, -1, :])
+            loss_steering_angle = F.mse_loss(
+                y_hat[:, -1, 0], targets[:, -1, 0])
+            loss_speed = F.mse_loss(
+                y_hat[:, -1, 1], targets[:, -1, 1])
+
+        loss = loss_future_path + loss_steering_angle + loss_speed
+
+        return loss

@@ -6,7 +6,7 @@ import torch.amp as amp
 from data.stats import Stats
 from data.dataset import CommaDataset, cycle
 from config import cfg
-from modules.model import PilotNetWrapped
+from modules.model import SteerNetWrapped
 from eval import get_val_loss
 
 # hyperparameters
@@ -39,7 +39,7 @@ val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
 torch.set_float32_matmul_precision("high")
 
 # model
-model = PilotNetWrapped(device)
+model = SteerNetWrapped(device, return_dict=False)
 
 # training
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
@@ -47,7 +47,8 @@ scaler = amp.GradScaler(device=device)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
     optimizer, "min", patience=5)
 
-stats = Stats(run_name, epochs=int(len(train_dataset) / max_iters))
+stats = Stats(run_name, epochs=int(
+    len(train_dataset) / max_iters), enabled=False)
 
 
 def save_checkpoint(val_loss: float, iter: int):
@@ -72,18 +73,8 @@ for iter, (train_features, train_labels) in enumerate(cycle(train_dataloader)):
 
     # forward pass
     with amp.autocast(device_type=device, dtype=torch.bfloat16):
-        y_hat = model(train_features["past_frames"],
-                      train_features["past_path"])
-
-        # RMSE loss for the angle and speed
-        loss_path = F.mse_loss(
-            y_hat["future_path"], train_labels["future_path"])
-        loss_angle = torch.sqrt(F.mse_loss(
-            y_hat["steering_angle"], train_labels["steering_angle"]))
-        loss_speed = torch.sqrt(F.mse_loss(
-            y_hat["speed"], train_labels["speed"]))
-
-        loss = loss_path + loss_angle + loss_speed
+        y_hat, loss = model(train_features["past_frames"],
+                            train_features["past_path"], train_labels)
 
     # backward pass
     optimizer.zero_grad()
@@ -106,6 +97,9 @@ for iter, (train_features, train_labels) in enumerate(cycle(train_dataloader)):
         stats.track_iter(loss=loss.item(), val_loss=val_loss)
     else:
         stats.track_iter(loss=loss.item())
+
+        if stats.enabled is False:
+            print(f"iter {iter} train_loss={loss.item():.2f}")
 
 
 print(f"Finished training. Saving to {out_dir}/{stats.architecture}.pt")
