@@ -35,8 +35,8 @@ class SteerNet(nn.Module):
 
     def __init__(
         self,
-        img_size: int,
         n_frames: int,
+        img_size=224,
         depth=24,  # from Table 1: model sizes (tiny)
         embd_dim=192,  # from Table 1: model sizes (tiny)
         drop_rate=0.1,  # from Table 6: training settings
@@ -141,7 +141,8 @@ class VideoPatchEmbedding(nn.Module):
         )
 
         self.cls_token = nn.Parameter(torch.zeros(1, 1, self.embd_dim))
-        self.pos_embd = nn.Parameter(torch.zeros(self.n_patches + 1, self.embd_dim))
+        self.pos_embd = nn.Parameter(
+            torch.zeros(self.n_patches + 1, self.embd_dim))
         self.temp_embd = nn.Parameter(
             torch.zeros(1, n_frames // kernel_size, self.embd_dim)
         )
@@ -244,7 +245,8 @@ class BlockList(nn.Module):
         self.n_hidden = n_hidden
 
         self.blocks = nn.ModuleList(
-            [Block(n_embd=self.n_hidden, layer_idx=i) for i in range(self.n_layers)]
+            [Block(n_embd=self.n_hidden, layer_idx=i)
+             for i in range(self.n_layers)]
         )
         self.norm = nn.LayerNorm(self.n_hidden)
 
@@ -274,7 +276,8 @@ SteerTransform = transforms.Compose(
     [
         transforms.ToTensor(),
         transforms.Resize([224, 224]),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[
+                             0.229, 0.224, 0.225]),
     ]
 )
 

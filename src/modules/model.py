@@ -4,14 +4,19 @@ from modules.pilotnet import PilotNet
 from modules.seq2seq import Seq2Seq
 from modules.steer import SteerNet
 from modules.av_wrapper import AVWrapper
+from config import cfg
 
 
-def PilotNetWrapped(device: str) -> nn.Module:
-    pilot = PilotNet().to(device)
+def PilotNetWrapped(device: str, return_dict: bool = True) -> nn.Module:
+    model = PilotNet().to(device)
 
-    pilot.compile()
-    model = AVWrapper(pilot).to(device)
-    # can't compile a model returning a dict
+    if return_dict:
+        model.compile()
+        model = AVWrapper(model, return_dict=True).to(device)
+        # can't compile a model returning a dict
+    else:
+        model = AVWrapper(model, return_dict=False).to(device)
+        model.compile()
 
     return model
 
@@ -27,14 +32,14 @@ def Seq2SeqWrapped(device: str) -> nn.Module:
 
 
 def SteerNetWrapped(device: str, return_dict: bool = True) -> nn.Module:
-    model = SteerNet().to(device)
+    model = SteerNet(cfg["model"]["past_steps"]).to(device)
 
     if return_dict:
         model.compile()
         model = AVWrapper(model, return_dict=True).to(device)
         # can't compile a model returning a dict
     else:
-        model = AVWrapper(model, return_dict=False)
+        model = AVWrapper(model, return_dict=False).to(device)
         model.compile()
 
     return model

@@ -5,6 +5,9 @@ from typing import Optional, TypedDict
 
 from config import cfg
 
+# allow .item() for speed and angles in the loss eq.
+torch._dynamo.config.capture_scalar_outputs = True
+
 ModelOutputDict = TypedDict(
     "ModelOutput",
     {
@@ -28,12 +31,14 @@ class AVWrapper(nn.Module):
         net: nn.Module,
         num_future_steps=cfg["model"]["future_steps"],
         return_dict=True,
+        device="cuda"
     ):
         super().__init__()
 
         self.net = net
         self.num_future_steps = num_future_steps
         self.return_dict = return_dict
+        self.device = device
 
         # Output layers
         self.out = nn.ModuleDict(
@@ -81,7 +86,12 @@ class AVWrapper(nn.Module):
                 "speed": speed,
             }
         else:
-            new_row = torch.tensor([steering.item(), speed.item(), 0.0])
+            # pred.shape = (B, T+1, 3)
+            new_row = torch.zeros(
+                (future_path.shape[0], 1, 3), device=self.device)
+            new_row[-1, -1, 0] = steering
+            new_row[-1, -1, 1] = speed
+
             pred = torch.cat((future_path, new_row), dim=1)
 
         # now compute loss
@@ -102,11 +112,11 @@ class AVWrapper(nn.Module):
                 y_hat["speed"], targets["speed"])
         else:
             loss_future_path = F.mse_loss(
-                y_hat[:, -1, :], targets[:, -1, :])
+                y_hat[:, :-1, :], targets["future_path"])
             loss_steering_angle = F.mse_loss(
-                y_hat[:, -1, 0], targets[:, -1, 0])
+                y_hat[:, -1, 0],  targets["steering_angle"])
             loss_speed = F.mse_loss(
-                y_hat[:, -1, 1], targets[:, -1, 1])
+                y_hat[:, -1, 1], targets["speed"])
 
         loss = loss_future_path + loss_steering_angle + loss_speed
 

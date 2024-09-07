@@ -6,7 +6,7 @@ import torch.amp as amp
 from data.stats import Stats
 from data.dataset import CommaDataset, cycle
 from config import cfg
-from modules.model import SteerNetWrapped
+from modules.model import SteerNetWrapped, PilotNetWrapped
 from eval import get_val_loss
 
 # hyperparameters
@@ -21,7 +21,7 @@ max_iters = 200
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 run_name = "pilotnet"
-out_dir = f"../runs/"  # save models in /workspace/runs/
+out_dir = f"../runs"  # save models in /workspace/runs/
 # repo in /workspace/steer; dataset in /workspace/comma2k19
 
 torch.manual_seed(seed)
@@ -39,7 +39,7 @@ val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
 torch.set_float32_matmul_precision("high")
 
 # model
-model = SteerNetWrapped(device, return_dict=False)
+model = PilotNetWrapped(device, return_dict=False)
 
 # training
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)

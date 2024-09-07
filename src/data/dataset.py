@@ -12,6 +12,7 @@ from PIL import Image
 import data.fetch
 from config import cfg
 import lib.paths as paths
+from modules.steer import SteerTransform
 
 
 class CommaDataset(Dataset):
@@ -33,6 +34,9 @@ class CommaDataset(Dataset):
         with open(split_path, "rb") as f:
             self.frame_paths = pickle.load(f)
 
+        # todo: procent of dataset
+        print(len(self.frame_paths))
+
         # the parent dir of the parent dir
         self.get_route_path = (
             lambda file_path: "/".join(file_path.rsplit("/", 2)[:-2]) + "/"
@@ -40,12 +44,8 @@ class CommaDataset(Dataset):
         self.get_id = lambda file_path: file_path.rsplit(
             "/", 1)[-1].split(".")[0]
 
-        # just convert to tensor
-        self.frame_transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225]),
-        ])
+        # convert to tensor, resize to (224, 224) and normalize
+        self.frame_transform = SteerTransform
 
     def __len__(self):
         return len(self.frame_paths)
