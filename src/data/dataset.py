@@ -17,7 +17,7 @@ from modules.steer import SteerTransform
 
 class CommaDataset(Dataset):
 
-    def __init__(self, path: str, chunk_num: int, train: bool, device: str):
+    def __init__(self, path: str, chunk_num: int, train: bool, device: str, dataset_percentage=100):
         super().__init__()
 
         self.path = f"{path}/Chunk_{chunk_num}"
@@ -34,8 +34,9 @@ class CommaDataset(Dataset):
         with open(split_path, "rb") as f:
             self.frame_paths = pickle.load(f)
 
-        # todo: procent of dataset
-        print(len(self.frame_paths))
+        # used to reduce dataset size, for better training on low end devices
+        self.frame_paths = self.frame_paths[:int(
+            len(self.frame_paths)*dataset_percentage/100.0)]
 
         # the parent dir of the parent dir
         self.get_route_path = (

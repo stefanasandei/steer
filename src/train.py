@@ -28,10 +28,10 @@ torch.manual_seed(seed)
 
 # data
 train_dataset = CommaDataset(
-    cfg["data"]["path"], chunk_num=1, train=True, device=device
+    cfg["data"]["path"], chunk_num=1, train=True, device=device, dataset_percentage=100
 )
 val_dataset = CommaDataset(
-    cfg["data"]["path"], chunk_num=1, train=False, device=device)
+    cfg["data"]["path"], chunk_num=1, train=False, device=device, dataset_percentage=100)
 train_dataloader = DataLoader(
     train_dataset, batch_size=batch_size, shuffle=True)
 val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
