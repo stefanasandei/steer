@@ -46,14 +46,29 @@ class SteerNet(nn.Module):
         self.img_size = img_size
         self.n_frames = n_frames
 
+        # from video sequence to embeddings
         self.patch_embd = VideoPatchEmbedding(
             n_frames=n_frames, img_size=img_size, embd_dim=embd_dim, drop_rate=drop_rate
         )
 
+        # process embedding sequence using mamba blocks
         self.video_encoder = BlockList(n_layers=depth, n_hidden=embd_dim)
-        self.path_encoder = BlockList(n_layers=depth // 2, n_hidden=embd_dim)
 
+        # process past path using mamba block list
+        self.path_encoder = nn.Sequential(
+            # since each path only has 3 components (x,y,z)
+            # use a much smaller mamba encoder block, and use
+            # two linear layers two project into right dims
+            nn.Linear(3, embd_dim // 6, bias=False),
+            BlockList(n_layers=depth // 2, n_hidden=embd_dim // 6),
+            nn.Linear(embd_dim // 6, embd_dim, bias=False),
+        )
+
+        # final head to output hidden features
+        # to be later passed to an av_wrapper to
+        # get proper outputs
         self.head = nn.Sequential(
+            # slowly downsize the embeddings
             nn.Linear(embd_dim, embd_dim // 3 * 2),
             nn.GELU(),
             nn.Dropout(drop_rate),
@@ -75,19 +90,19 @@ class SteerNet(nn.Module):
         # (B, T', C)
         # pass through a list of mamba blocks
         video_features = self.video_encoder(patches)
-        path_features = self.path_encoder(patches)
+        path_features = self.path_encoder(past_xyz)
 
         # add the two sets of features
         hidden = video_features + path_features
 
         # only the classification token
-        # to be passed to the av_wrapper to extract outputs
         # (B, C)
         hidden = hidden[:, 0, :]
 
         # (B, embd_dim/2)
         features = self.head(hidden)
 
+        # to be passed to the av_wrapper to extract outputs
         return features
 
 
