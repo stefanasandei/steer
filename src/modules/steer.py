@@ -45,6 +45,7 @@ class SteerNet(nn.Module):
 
         self.img_size = img_size
         self.n_frames = n_frames
+        self.embd_dim = embd_dim
 
         # from video sequence to embeddings
         self.patch_embd = VideoPatchEmbedding(
@@ -59,7 +60,8 @@ class SteerNet(nn.Module):
             # since each path only has 3 components (x,y,z)
             # use a much smaller mamba encoder block, and use
             # two linear layers two project into right dims
-            nn.Linear(3, embd_dim // 6, bias=False),
+            # note: first merge last two dims of past_xyz
+            nn.Linear(n_frames * 3, embd_dim // 6, bias=False),
             BlockList(n_layers=depth // 2, n_hidden=embd_dim // 6),
             nn.Linear(embd_dim // 6, embd_dim, bias=False),
         )
@@ -83,19 +85,23 @@ class SteerNet(nn.Module):
         returns hidden features of shape (B, embd_dim/2)
         """
 
+        # get batch size
+        B = past_frames.shape[0]
+
         # (B, T', C) -> flatten sequence of token embeddings
         # get video patches
         patches = self.patch_embd(past_frames)
 
-        # (B, T', C)
+        # (B, T', C); C = embd_dim
         # pass through a list of mamba blocks
         video_features = self.video_encoder(patches)
+
+        # go from (B,T,3) to (B,T*3) and to (B, 1, C)
+        past_xyz = past_xyz.view(B, 1, self.embd_dim)
         path_features = self.path_encoder(past_xyz)
 
         # add the two sets of features
-        # torch.Size([1, 2157, 192]) torch.Size([1, 11, 192])
-        # todo: shape issue
-        # print(video_features.shape, path_features.shape)
+        # (B,1,C) + (B,T',C) = (B,T',C)
         hidden = video_features + path_features
 
         # only the classification token
@@ -144,8 +150,7 @@ class VideoPatchEmbedding(nn.Module):
         )
 
         self.cls_token = nn.Parameter(torch.zeros(1, 1, self.embd_dim))
-        self.pos_embd = nn.Parameter(
-            torch.zeros(self.n_patches + 1, self.embd_dim))
+        self.pos_embd = nn.Parameter(torch.zeros(self.n_patches + 1, self.embd_dim))
         self.temp_embd = nn.Parameter(
             torch.zeros(1, n_frames // kernel_size, self.embd_dim)
         )
@@ -250,8 +255,7 @@ class BlockList(nn.Module):
         self.n_hidden = n_hidden
 
         self.blocks = nn.ModuleList(
-            [Block(n_embd=self.n_hidden, layer_idx=i)
-             for i in range(self.n_layers)]
+            [Block(n_embd=self.n_hidden, layer_idx=i) for i in range(self.n_layers)]
         )
         self.norm = nn.LayerNorm(self.n_hidden)
 
@@ -282,8 +286,7 @@ SteerTransform = transforms.Compose(
     [
         transforms.ToTensor(),
         transforms.Resize([224, 224]),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[
-                             0.229, 0.224, 0.225]),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ]
 )
 
