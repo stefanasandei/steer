@@ -11,11 +11,11 @@ from eval import get_val_loss
 
 # hyperparameters
 seed = 42
-batch_size = 1
+batch_size = 8
 learning_rate = 5e-3
 eval_iters = 5
 eval_interval = 100
-max_iters = 2
+max_iters = 10
 # dataset len is 147389, with batch size 16 it takes ~9000 iters
 # 20% of the dataset is 29477, with a batch size of 64 it takes ~ 500 iters for an epoch
 
@@ -92,7 +92,7 @@ for iter, (train_features, train_labels) in enumerate(cycle(train_dataloader)):
     # timing and stats
     if iter % eval_interval == 0:
         val_loss = get_val_loss(model, val_dataloader, device)
-        if val_loss < stats.best_loss:
+        if val_loss < stats.best_loss and iter > 0:
             save_checkpoint(val_loss, iter)
 
         print(

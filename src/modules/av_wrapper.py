@@ -86,12 +86,15 @@ class AVWrapper(nn.Module):
                 "speed": speed,
             }
         else:
-            # pred.shape = (B, T+1, 3)
-            new_row = torch.zeros(
-                (future_path.shape[0], 1, 3), device=self.device)
-            new_row[-1, -1, 0] = steering
-            new_row[-1, -1, 1] = speed
+            empty_column = torch.zeros(
+                (future_path.shape[0], 1, 1), device=self.device)
+            steering = steering.view(-1, 1, 1)
+            speed = speed.view(-1, 1, 1)
 
+            new_row = torch.cat([steering, speed, empty_column],
+                                dim=2)  # (B, 1, 3)
+
+            # pred.shape = (B, T+1, 3)
             pred = torch.cat((future_path, new_row), dim=1)
 
         # now compute loss
