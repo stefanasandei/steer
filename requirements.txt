@@ -13,3 +13,4 @@ einops==0.8.0
 torchinfo==1.8.0
 mamba-ssm==2.2.2
 causal-conv1d==1.4.0
+flash-attn==1.0.4

@@ -97,7 +97,7 @@ class SteerNet(nn.Module):
         video_features = self.video_encoder(patches)
 
         # go from (B,T,3) to (B,T*3) and to (B, 1, C)
-        past_xyz = past_xyz.view(B, 1, self.embd_dim)
+        past_xyz = past_xyz.view(B, 1, -1)
         path_features = self.path_encoder(past_xyz)
 
         # add the two sets of features
@@ -150,7 +150,8 @@ class VideoPatchEmbedding(nn.Module):
         )
 
         self.cls_token = nn.Parameter(torch.zeros(1, 1, self.embd_dim))
-        self.pos_embd = nn.Parameter(torch.zeros(self.n_patches + 1, self.embd_dim))
+        self.pos_embd = nn.Parameter(
+            torch.zeros(self.n_patches + 1, self.embd_dim))
         self.temp_embd = nn.Parameter(
             torch.zeros(1, n_frames // kernel_size, self.embd_dim)
         )
@@ -201,7 +202,7 @@ class Block(nn.Module):
     of the same shape.
     """
 
-    def __init__(self, n_embd: int, layer_idx: Optional[int] = None, norm_epsilon=1e-5):
+    def __init__(self, n_embd: int, layer_idx: Optional[int] = None, norm_epsilon=1e-5, use_triton_kernel=False):
         super().__init__()
 
         assert (
@@ -211,6 +212,7 @@ class Block(nn.Module):
         self.d_model = n_embd
         self.norm_eps = norm_epsilon
         self.layer_idx = layer_idx
+        self.use_triton_kernel = use_triton_kernel
 
         self.mamba = Mamba(d_model=n_embd, layer_idx=layer_idx)
         self.ln = nn.LayerNorm(n_embd, eps=norm_epsilon)
@@ -224,16 +226,22 @@ class Block(nn.Module):
         """
 
         # triton operation, for performance
-        # https://pytorch.org/tutorials/recipes/torch_compile_user_defined_triton_kernel_tutorial.html
-        h, residual = layer_norm_fn(
-            h,
-            self.ln.weight,
-            self.ln.bias,
-            residual,
-            prenorm=True,
-            eps=self.norm_eps,
-            residual_in_fp32=True,
-        )
+        if self.use_triton_kernel:
+            # https://pytorch.org/tutorials/recipes/torch_compile_user_defined_triton_kernel_tutorial.html
+            # doesn't work with torch.compile! atm: 09.09.2024
+            h, residual = layer_norm_fn(
+                h,
+                self.ln.weight,
+                self.ln.bias,
+                residual,
+                prenorm=True,
+                eps=self.norm_eps,
+                residual_in_fp32=True,
+            )
+        else:
+            h = self.ln(h)
+            if residual is not None:
+                h = h + residual  # skip connection
 
         # (B, T', C)
         h = self.mamba(h)
@@ -248,14 +256,16 @@ class BlockList(nn.Module):
     manages residual connections.
     """
 
-    def __init__(self, n_layers: int = 24, n_hidden: int = 192):
+    def __init__(self, n_layers: int = 24, n_hidden: int = 192, use_triton_kernel: bool = False):
         super().__init__()
 
         self.n_layers = n_layers
         self.n_hidden = n_hidden
+        self.use_triton_kernel = use_triton_kernel
 
         self.blocks = nn.ModuleList(
-            [Block(n_embd=self.n_hidden, layer_idx=i) for i in range(self.n_layers)]
+            [Block(n_embd=self.n_hidden, layer_idx=i, use_triton_kernel=use_triton_kernel)
+             for i in range(self.n_layers)]
         )
         self.norm = nn.LayerNorm(self.n_hidden)
 
@@ -267,14 +277,18 @@ class BlockList(nn.Module):
             hidden, residual = block(hidden, residual)
 
         # layer norm
-        hidden = layer_norm_fn(
-            hidden,
-            # use the nn.LayerNorm state, but forward
-            # it using a triton kernel
-            self.norm.weight,
-            self.norm.bias,
-            residual_in_fp32=True,
-        )
+        if self.use_triton_kernel:
+            # doesn't work with torch.compile! atm: 09.09.2024
+            hidden = layer_norm_fn(
+                hidden,
+                # use the nn.LayerNorm state, but forward
+                # it using a triton kernel
+                self.norm.weight,
+                self.norm.bias,
+                residual_in_fp32=True,
+            )
+        else:
+            hidden = self.norm(hidden)
 
         # same shape: (B, T', C)
         return hidden
@@ -285,7 +299,8 @@ SteerTransform = transforms.Compose(
     [
         transforms.ToTensor(),
         transforms.Resize([224, 224]),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[
+                             0.229, 0.224, 0.225]),
     ]
 )
 

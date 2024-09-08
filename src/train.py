@@ -34,7 +34,8 @@ train_dataset = CommaDataset(
 val_dataset = CommaDataset(
     cfg["data"]["path"], chunk_num=1, train=False, device=device, dataset_percentage=100
 )
-train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+train_dataloader = DataLoader(
+    train_dataset, batch_size=batch_size, shuffle=True)
 val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
 
 torch.set_float32_matmul_precision("high")
@@ -45,9 +46,11 @@ model = SteerNetWrapped(device, return_dict=False)
 # training
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 scaler = amp.GradScaler(device=device)
-scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min", patience=5)
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+    optimizer, "min", patience=5)
 
-stats = Stats(run_name, epochs=int(len(train_dataset) / max_iters), enabled=False)
+stats = Stats(run_name, epochs=int(
+    len(train_dataset) / max_iters), enabled=False)
 
 
 def save_checkpoint(val_loss: float, iter: int):
@@ -92,7 +95,8 @@ for iter, (train_features, train_labels) in enumerate(cycle(train_dataloader)):
         if val_loss < stats.best_loss:
             save_checkpoint(val_loss, iter)
 
-        print(f"iter {iter}; train_loss={loss.item():.4f}; val_loss={val_loss:.4f}")
+        print(
+            f"iter {iter}; train_loss={loss.item():.4f}; val_loss={val_loss:.4f}")
         stats.track_iter(loss=loss.item(), val_loss=val_loss)
     else:
         stats.track_iter(loss=loss.item())
