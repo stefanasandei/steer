@@ -17,10 +17,11 @@ eval_iters = 5
 eval_interval = 100
 max_iters = 200
 # dataset len is 147389, with batch size 16 it takes ~9000 iters
+# 20% of the dataset is 29477, with a batch size of 64 it takes ~ 500 iters for an epoch
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-run_name = "pilotnet"
+run_name = "steer"
 out_dir = f"../runs"  # save models in /workspace/runs/
 # repo in /workspace/steer; dataset in /workspace/comma2k19
 
@@ -39,7 +40,7 @@ val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
 torch.set_float32_matmul_precision("high")
 
 # model
-model = PilotNetWrapped(device, return_dict=False)
+model = SteerNetWrapped(device, return_dict=False)
 
 # training
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)

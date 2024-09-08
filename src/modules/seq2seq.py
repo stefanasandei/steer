@@ -66,6 +66,7 @@ class Encoder(nn.Module):
         self.feature_extractor = regnet_y_800mf(
             weights=RegNet_Y_800MF_Weights.DEFAULT)
         self.feature_extractor.fc = nn.Identity()
+        # self.feature_extractor.requires_grad_(False)
 
         self.fc = nn.LazyLinear(self.n_feat)
         self.bn = nn.BatchNorm1d(self.n_feat)
