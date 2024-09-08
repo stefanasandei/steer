@@ -11,11 +11,11 @@ from eval import get_val_loss
 
 # hyperparameters
 seed = 42
-batch_size = 64
+batch_size = 1
 learning_rate = 5e-3
 eval_iters = 5
 eval_interval = 100
-max_iters = 200
+max_iters = 2
 # dataset len is 147389, with batch size 16 it takes ~9000 iters
 # 20% of the dataset is 29477, with a batch size of 64 it takes ~ 500 iters for an epoch
 

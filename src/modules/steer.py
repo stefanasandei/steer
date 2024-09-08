@@ -37,7 +37,7 @@ class SteerNet(nn.Module):
         self,
         n_frames: int,
         img_size=224,
-        depth=24,  # from Table 1: model sizes (tiny)
+        depth=2,  # from Table 1: model sizes (tiny)
         embd_dim=192,  # from Table 1: model sizes (tiny)
         drop_rate=0.1,  # from Table 6: training settings
     ):
@@ -150,7 +150,8 @@ class VideoPatchEmbedding(nn.Module):
         self.drop = nn.Dropout(drop_rate)
 
     def forward(self, x):
-        # x.shape = (B, C, T, H, W)
+        # x.shape = (B, T, C, H, W)
+        x = x.permute(0, 2, 1, 3, 4)  # (B, C, T, H, W)
 
         # stays the same relative shape
         # aka (B, 192, T, 14, 14) for img of (3, 224, 224)
@@ -215,15 +216,16 @@ class Block(nn.Module):
         """
 
         # triton operation, for performance
-        h, residual = layer_norm_fn(
-            h,
-            self.ln.weight,
-            self.ln.bias,
-            residual,
-            prenorm=True,
-            eps=self.norm_eps,
-            residual_in_fp32=True,
-        )
+        # todo: breaks torch.compile
+        # h, residual = layer_norm_fn(
+        #     h,
+        #     self.ln.weight,
+        #     self.ln.bias,
+        #     residual,
+        #     prenorm=True,
+        #     eps=self.norm_eps,
+        #     residual_in_fp32=True,
+        # )
 
         # (B, T', C)
         h = self.mamba(h)
@@ -258,6 +260,7 @@ class BlockList(nn.Module):
             hidden, residual = block(hidden, residual)
 
         # layer norm
+        # todo: breaks torch.compile
         hidden = layer_norm_fn(
             hidden,
             # use the nn.LayerNorm state, but forward

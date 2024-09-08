@@ -32,7 +32,8 @@ def Seq2SeqWrapped(device: str) -> nn.Module:
 
 
 def SteerNetWrapped(device: str, return_dict: bool = True) -> nn.Module:
-    model = SteerNet(cfg["model"]["past_steps"]).to(device)
+    # add one more frame, the current one
+    model = SteerNet(cfg["model"]["past_steps"]+1).to(device)
 
     if return_dict:
         model.compile()
