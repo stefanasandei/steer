@@ -224,16 +224,16 @@ class Block(nn.Module):
         """
 
         # triton operation, for performance
-        # todo: breaks torch.compile
-        # h, residual = layer_norm_fn(
-        #     h,
-        #     self.ln.weight,
-        #     self.ln.bias,
-        #     residual,
-        #     prenorm=True,
-        #     eps=self.norm_eps,
-        #     residual_in_fp32=True,
-        # )
+        # https://pytorch.org/tutorials/recipes/torch_compile_user_defined_triton_kernel_tutorial.html
+        h, residual = layer_norm_fn(
+            h,
+            self.ln.weight,
+            self.ln.bias,
+            residual,
+            prenorm=True,
+            eps=self.norm_eps,
+            residual_in_fp32=True,
+        )
 
         # (B, T', C)
         h = self.mamba(h)
@@ -267,15 +267,14 @@ class BlockList(nn.Module):
             hidden, residual = block(hidden, residual)
 
         # layer norm
-        # todo: breaks torch.compile
-        # hidden = layer_norm_fn(
-        #     hidden,
-        #     # use the nn.LayerNorm state, but forward
-        #     # it using a triton kernel
-        #     self.norm.weight,
-        #     self.norm.bias,
-        #     residual_in_fp32=True,
-        # )
+        hidden = layer_norm_fn(
+            hidden,
+            # use the nn.LayerNorm state, but forward
+            # it using a triton kernel
+            self.norm.weight,
+            self.norm.bias,
+            residual_in_fp32=True,
+        )
 
         # same shape: (B, T', C)
         return hidden

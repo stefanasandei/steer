@@ -9,3 +9,7 @@ tqdm==4.65.0
 opencv-python==4.10.0.84
 wandb==0.17.7
 pandas==2.2.2
+einops==0.8.0
+torchinfo==1.8.0
+mamba-ssm==2.2.2
+causal-conv1d==1.4.0
