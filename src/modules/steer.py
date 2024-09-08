@@ -93,6 +93,9 @@ class SteerNet(nn.Module):
         path_features = self.path_encoder(past_xyz)
 
         # add the two sets of features
+        # torch.Size([1, 2157, 192]) torch.Size([1, 11, 192])
+        # todo: shape issue
+        # print(video_features.shape, path_features.shape)
         hidden = video_features + path_features
 
         # only the classification token
@@ -261,14 +264,14 @@ class BlockList(nn.Module):
 
         # layer norm
         # todo: breaks torch.compile
-        hidden = layer_norm_fn(
-            hidden,
-            # use the nn.LayerNorm state, but forward
-            # it using a triton kernel
-            self.norm.weight,
-            self.norm.bias,
-            residual_in_fp32=True,
-        )
+        # hidden = layer_norm_fn(
+        #     hidden,
+        #     # use the nn.LayerNorm state, but forward
+        #     # it using a triton kernel
+        #     self.norm.weight,
+        #     self.norm.bias,
+        #     residual_in_fp32=True,
+        # )
 
         # same shape: (B, T', C)
         return hidden
