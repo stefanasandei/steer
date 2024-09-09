@@ -12,8 +12,7 @@ import argparse
 
 from lib.paths import get_local_path
 from lib.drawing import draw_debug_frame, draw_frame
-from modules.model import PilotNetWrapped, Seq2SeqWrapped
-from modules.model import PilotNetWrapped, Seq2SeqWrapped
+from modules.model import PilotNetWrapped, Seq2SeqWrapped, SteerNetWrapped
 from config import cfg
 
 
@@ -44,7 +43,7 @@ def create_video(route_path: str, output_path: str, model_path: str, max_frames=
     device = "cuda" if torch.cuda.is_available() else "mps"
 
     # model = torch.load(model_path)
-    model = Seq2SeqWrapped(device)
+    model = SteerNetWrapped(device)
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
 
@@ -54,20 +53,22 @@ def create_video(route_path: str, output_path: str, model_path: str, max_frames=
     trans = transforms.Compose(
         [
             transforms.ToTensor(),
-            transforms.Resize((1164 // 2, 874 // 2)),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            transforms.Resize((224, 224)),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[
+                                 0.229, 0.224, 0.225]),
         ]
     )
 
     for i in tqdm(
-        range(cfg["model"]["past_steps"] + 1, max_frames - cfg["model"]["future_steps"])
+        range(cfg["model"]["past_steps"] + 1,
+              max_frames - cfg["model"]["future_steps"])
     ):
         curr_frame = cv2.imread(f"{route_path}/video/{str(i).zfill(6)}.jpeg")
         curr_frame = cv2.cvtColor(curr_frame, cv2.COLOR_BGR2RGB)
 
         # prepare past path
         local_path = get_local_path(positions, orientations, i)
-        previous_path = local_path[i - cfg["model"]["past_steps"] : i + 1]
+        previous_path = local_path[i - cfg["model"]["past_steps"]: i + 1]
         prev_path = torch.from_numpy(previous_path)
 
         # prepare past frames
@@ -80,11 +81,12 @@ def create_video(route_path: str, output_path: str, model_path: str, max_frames=
         frames = torch.unsqueeze(frames, 0).to(device)
         prev_path = torch.unsqueeze(prev_path, 0).float().to(device)
 
-        y_hat = model(past_frames=frames, past_xyz=prev_path)
+        y_hat, _ = model(past_frames=frames, past_xyz=prev_path)
 
         future_path = y_hat["future_path"].squeeze().detach().cpu().numpy()
         speed = y_hat["speed"].squeeze().detach().cpu().numpy()
-        steering_angle = y_hat["steering_angle"].squeeze().detach().cpu().numpy()
+        steering_angle = y_hat["steering_angle"].squeeze(
+        ).detach().cpu().numpy()
 
         img = draw_frame(curr_frame, future_path, speed, steering_angle)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)

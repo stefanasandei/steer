@@ -2,6 +2,7 @@
 Utility class to log stats to wandb. Used in training.
 """
 
+import matplotlib.pyplot as plt
 import wandb
 import time
 import sys
@@ -21,6 +22,7 @@ class Stats:
         self.best_loss = sys.float_info.max
         self.architecture = architecture
         self.iter = 0
+        self.losses = []
 
         if self.enabled:
             # will request api key from stdin
@@ -38,8 +40,9 @@ class Stats:
         # won't be accurate for the first step yolo
         self.t0 = time.time()
 
-    def track_iter(self, loss: float, val_loss=0.0):
+    def track_iter(self, loss: float, lr: float, val_loss=0.0):
         self.iter += 1
+        self.losses.append(loss)
 
         t1 = time.time()
         dt = t1 - self.t0
@@ -57,4 +60,9 @@ class Stats:
             wandb.log(data)
         else:
             # log to stdout
-            print(f"iter {self.iter}; loss={loss:.2f}; time={dt*1000:.1f}ms")
+            print(
+                f"iter {self.iter}; loss={loss:.2f}; lr={lr}; time={dt*1000:.1f}ms")
+
+    def plot_loss(self):
+        plt.plot(self.losses)
+        plt.show()

@@ -8,14 +8,20 @@ from data.dataset import CommaDataset, cycle
 from config import cfg
 from modules.model import SteerNetWrapped, PilotNetWrapped
 from eval import get_val_loss
+from lib.lr import get_lr
 
 # hyperparameters
 seed = 42
 batch_size = 8
-learning_rate = 5e-3
+
+max_lr = 3e-3
+min_lr = max_lr * 0.02
+warmup_iters = 50
+learning_rate = min_lr
+
 eval_iters = 5
 eval_interval = 100
-max_iters = 20
+max_iters = 300
 # dataset len is 147389, with batch size 16 it takes ~9000 iters
 # 20% of the dataset is 29477, with a batch size of 64 it takes ~ 500 iters for an epoch
 
@@ -44,10 +50,8 @@ torch.set_float32_matmul_precision("high")
 model = SteerNetWrapped(device, return_dict=False)
 
 # training
-optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+optimizer = torch.optim.AdamW(model.parameters(), lr=min_lr)
 scaler = amp.GradScaler(device=device)
-scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-    optimizer, "min", patience=5)
 
 stats = Stats(run_name, epochs=int(
     len(train_dataset) / max_iters), enabled=False)
@@ -60,7 +64,6 @@ def save_checkpoint(val_loss: float, iter: int):
     checkpoint = {
         "model": model.state_dict(),
         "optimizer": optimizer.state_dict(),
-        "scheduler": scheduler.state_dict(),
         "iter_num": iter,
         "val_loss": val_loss,
     }
@@ -80,14 +83,16 @@ for iter, (train_features, train_labels) in enumerate(cycle(train_dataloader)):
         )
 
     # backward pass
+    optimizer.param_groups[0]["lr"] = learning_rate
     optimizer.zero_grad()
     scaler.scale(loss).backward()
     scaler.unscale_(optimizer)
-    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
+    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
     scaler.step(optimizer)
     scaler.update()
 
-    scheduler.step(loss)
+    learning_rate = get_lr(
+        iter, max_lr, min_lr, warmup_iters, max_iters)
 
     # timing and stats
     if iter % eval_interval == 0:
@@ -97,10 +102,12 @@ for iter, (train_features, train_labels) in enumerate(cycle(train_dataloader)):
 
         print(
             f"iter {iter}; train_loss={loss.item():.4f}; val_loss={val_loss:.4f}")
-        stats.track_iter(loss=loss.item(), val_loss=val_loss)
+        stats.track_iter(loss=loss.item(), lr=learning_rate, val_loss=val_loss)
     else:
-        stats.track_iter(loss=loss.item())
+        stats.track_iter(loss=loss.item(), lr=learning_rate)
 
 
 print(f"Finished training. Saving to {out_dir}/{stats.architecture}.pt")
 torch.save(model.state_dict(), f"{out_dir}/{stats.architecture}.pt")
+
+stats.plot_loss()
