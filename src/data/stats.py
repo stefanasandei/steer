@@ -20,6 +20,7 @@ class Stats:
         self.enabled = enabled
         self.best_loss = sys.float_info.max
         self.architecture = architecture
+        self.iter = 0
 
         if self.enabled:
             # will request api key from stdin
@@ -38,6 +39,8 @@ class Stats:
         self.t0 = time.time()
 
     def track_iter(self, loss: float, val_loss=0.0):
+        self.iter += 1
+
         t1 = time.time()
         dt = t1 - self.t0
         self.t0 = t1
@@ -52,3 +55,6 @@ class Stats:
         if self.enabled:
             # send data to wandb
             wandb.log(data)
+        else:
+            # log to stdout
+            print(f"iter {self.iter}; loss={loss:.2f}; time={dt*1000:.1f}ms")
