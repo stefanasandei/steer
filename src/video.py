@@ -34,7 +34,7 @@ def create_debug_video(route_path: str, output_path: str, max_frames=1200):
 
 
 @torch.no_grad
-def create_video(route_path: str, output_path: str, model_path: str, max_frames=200):
+def create_video(route_path: str, output_path: str, model_path: str, max_frames=1200):
     # video writer
     fourcc = cv2.VideoWriter_fourcc(*"h264")
     out = cv2.VideoWriter(output_path, fourcc, 20.0, (1164, 874))

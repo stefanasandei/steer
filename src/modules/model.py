@@ -21,12 +21,17 @@ def PilotNetWrapped(device: str, return_dict: bool = True) -> nn.Module:
     return model
 
 
-def Seq2SeqWrapped(device: str) -> nn.Module:
+def Seq2SeqWrapped(device: str, return_dict: bool = True) -> nn.Module:
+    # add one more frame, the current one
     model = Seq2Seq().to(device)
 
-    model.compile()
-    model = AVWrapper(model).to(device)
-    # can't compile a model returning a dict
+    if return_dict:
+        model.compile()
+        model = AVWrapper(model, return_dict=True).to(device)
+        # can't compile a model returning a dict
+    else:
+        model = AVWrapper(model, return_dict=False).to(device)
+        model.compile()
 
     return model
 

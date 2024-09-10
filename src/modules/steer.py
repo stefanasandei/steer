@@ -37,7 +37,7 @@ class SteerNet(nn.Module):
         self,
         n_frames: int,
         img_size=224,
-        depth=6,  # from Table 1: model sizes (tiny) - 24
+        depth=12,  # from Table 1: model sizes (tiny) - 24
         embd_dim=192,  # from Table 1: model sizes (tiny)
         drop_rate=0.0,  # from Table 6: training settings - 0.1
     ):
@@ -239,9 +239,9 @@ class Block(nn.Module):
                 residual_in_fp32=True,
             )
         else:
-            h = self.ln(h)
-            if residual is not None:
-                h = h + residual  # skip connection
+            # skip connection
+            residual = (h + residual) if residual is not None else h
+            h = self.ln(residual.to(dtype=self.ln.weight.dtype))
 
         # (B, T', C)
         h = self.mamba(h)
@@ -267,7 +267,7 @@ class BlockList(nn.Module):
             [Block(n_embd=self.n_hidden, layer_idx=i, use_triton_kernel=use_triton_kernel)
              for i in range(self.n_layers)]
         )
-        self.norm = nn.LayerNorm(self.n_hidden)
+        self.ln = nn.LayerNorm(self.n_hidden)
 
     def forward(self, hidden):
         # forward through the mamba encoder
@@ -288,7 +288,7 @@ class BlockList(nn.Module):
                 residual_in_fp32=True,
             )
         else:
-            hidden = self.norm(hidden)
+            hidden = self.ln(hidden.to(dtype=self.ln.weight.dtype))
 
         # same shape: (B, T', C)
         return hidden

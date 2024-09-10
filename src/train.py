@@ -6,7 +6,7 @@ import torch.amp as amp
 from data.stats import Stats
 from data.dataset import CommaDataset, cycle
 from config import cfg
-from modules.model import SteerNetWrapped, PilotNetWrapped
+from modules.model import SteerNetWrapped, PilotNetWrapped, Seq2SeqWrapped
 from eval import get_val_loss
 from lib.lr import get_lr
 
