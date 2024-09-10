@@ -43,13 +43,17 @@ class AVWrapper(nn.Module):
         # Output layers
         self.out = nn.ModuleDict(
             {
-                "future_path": nn.LazyLinear(
-                    num_future_steps * 3
+                "future_path": nn.Sequential(
+                    nn.LazyLinear(
+                        64
+                    ), nn.GELU(), nn.Linear(64, 3*num_future_steps)
                 ),  # (x, y, z) for T future steps
                 # in radians
-                "steering_angle": nn.LazyLinear(1),
+                # "steering_angle": nn.LazyLinear(1),
+                "steering_angle": nn.Sequential(nn.LazyLinear(64), nn.GELU(), nn.Linear(64, 1)),
                 # in meters per second
-                "speed": nn.LazyLinear(1),
+                # "speed": nn.LazyLinear(1),
+                "speed": nn.Sequential(nn.LazyLinear(64), nn.GELU(), nn.Linear(64, 1)),
             }
         )
 
@@ -106,20 +110,23 @@ class AVWrapper(nn.Module):
     def _get_loss(self, y_hat, targets):
         loss = None
 
+        future_path, steering_angle, speed = None, None, None
+
         if self.return_dict:
-            loss_future_path = F.mse_loss(
-                y_hat["future_path"], targets["future_path"])
-            loss_steering_angle = F.mse_loss(
-                y_hat["steering_angle"], targets["steering_angle"])
-            loss_speed = F.mse_loss(
-                y_hat["speed"], targets["speed"])
+            future_path = y_hat["future_path"]
+            steering_angle = y_hat["steering_angle"]
+            speed = y_hat["speed"]
         else:
-            loss_future_path = F.mse_loss(
-                y_hat[:, :-1, :], targets["future_path"])
-            loss_steering_angle = F.mse_loss(
-                y_hat[:, -1, 0],  targets["steering_angle"])
-            loss_speed = F.mse_loss(
-                y_hat[:, -1, 1], targets["speed"])
+            future_path = y_hat[:, :-1, :]
+            steering_angle = y_hat[:, -1, 0]
+            speed = y_hat[:, -1, 1]
+
+        loss_future_path = torch.sqrt(F.mse_loss(
+            future_path, targets["future_path"]))
+        loss_steering_angle = F.mse_loss(
+            steering_angle, targets["steering_angle"])
+        loss_speed = F.mse_loss(
+            speed, targets["speed"])
 
         loss = loss_future_path + loss_steering_angle + loss_speed
 
