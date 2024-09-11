@@ -50,7 +50,8 @@ class Stats:
 
         self.best_loss = max(self.best_loss, val_loss)
 
-        data = {"loss/train": loss, "time": dt * 1000}  # ms
+        data = {"loss/train": loss, "time": dt *
+                1000, "learning_rate": lr}  # ms
 
         if val_loss != 0.0:
             data["loss/val"] = val_loss

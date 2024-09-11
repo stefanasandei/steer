@@ -37,9 +37,9 @@ class SteerNet(nn.Module):
         self,
         n_frames: int,
         img_size=224,
-        depth=12,  # from Table 1: model sizes (tiny) - 24
+        depth=24,  # from Table 1: model sizes (tiny) - 24
         embd_dim=192,  # from Table 1: model sizes (tiny)
-        drop_rate=0.0,  # from Table 6: training settings - 0.1
+        drop_rate=0.1,  # from Table 6: training settings - 0.1
     ):
         super().__init__()
 

@@ -12,16 +12,16 @@ from lib.lr import get_lr
 
 # hyperparameters
 seed = 42
-batch_size = 8
+batch_size = 64
 
 max_lr = 3e-3
 min_lr = max_lr * 0.02
-warmup_iters = 50
+warmup_iters = 100
 learning_rate = min_lr
 
 eval_iters = 5
 eval_interval = 100
-max_iters = 300
+max_iters = 900  # 4 epochs
 # dataset len is 147389, with batch size 16 it takes ~9000 iters
 # 20% of the dataset is 29477, with a batch size of 64 it takes ~ 500 iters for an epoch
 
@@ -35,7 +35,7 @@ torch.manual_seed(seed)
 
 # data
 train_dataset = CommaDataset(
-    cfg["data"]["path"], chunk_num=1, train=True, device=device, dataset_percentage=100
+    cfg["data"]["path"], chunk_num=1, train=True, device=device, dataset_percentage=10
 )
 val_dataset = CommaDataset(
     cfg["data"]["path"], chunk_num=1, train=False, device=device, dataset_percentage=100
@@ -54,7 +54,7 @@ optimizer = torch.optim.AdamW(model.parameters(), lr=min_lr)
 scaler = amp.GradScaler(device=device)
 
 stats = Stats(run_name, epochs=int(
-    len(train_dataset) / max_iters), enabled=False)
+    len(train_dataset) / max_iters), enabled=True)
 
 
 def save_checkpoint(val_loss: float, iter: int):
