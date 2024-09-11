@@ -110,4 +110,4 @@ for iter, (train_features, train_labels) in enumerate(cycle(train_dataloader)):
 print(f"Finished training. Saving to {out_dir}/{stats.architecture}.pt")
 torch.save(model.state_dict(), f"{out_dir}/{stats.architecture}.pt")
 
-stats.plot_loss()
+# stats.plot_loss()
