@@ -14,10 +14,27 @@ from lib.paths import get_local_path
 from lib.drawing import draw_debug_frame, draw_frame
 from modules.model import PilotNetWrapped, Seq2SeqWrapped, SteerNetWrapped
 from config import cfg
+from modules.steer import SteerTransform
 
+def is_codec_available(codec: str) -> bool:
+    try:
+        fourcc = cv2.VideoWriter.fourcc(*codec)
+        temp_video = cv2.VideoWriter('temp.mp4', fourcc, 30, (640, 480), isColor=True)
+
+        val = temp_video.isOpened()
+        temp_video.release()
+
+        return val
+    except:
+        return False
 
 def create_debug_video(route_path: str, output_path: str, max_frames=1200):
-    fourcc = cv2.VideoWriter_fourcc(*"h264")
+    codec = "h264"
+    if not is_codec_available(codec):
+        print(f"Codec {codec} not available! Can't write video.")
+        return
+
+    fourcc = cv2.VideoWriter.fourcc(*codec)
     out = cv2.VideoWriter(output_path, fourcc, 20.0, (1164, 874))
 
     frames = np.load(f"{route_path}/frame.npz")
@@ -32,11 +49,15 @@ def create_debug_video(route_path: str, output_path: str, max_frames=1200):
 
     out.release()
 
-
 @torch.no_grad
 def create_video(route_path: str, output_path: str, model_path: str, max_frames=1200):
+    codec = "h264"
+    if not is_codec_available(codec):
+        print(f"Codec {codec} not available! Can't write video.")
+        return
+
     # video writer
-    fourcc = cv2.VideoWriter_fourcc(*"h264")
+    fourcc = cv2.VideoWriter.fourcc(*codec)
     out = cv2.VideoWriter(output_path, fourcc, 20.0, (1164, 874))
 
     # model
@@ -50,14 +71,7 @@ def create_video(route_path: str, output_path: str, model_path: str, max_frames=
     # data
     frames = np.load(f"{route_path}/frame.npz")
     positions, orientations = frames["position"], frames["orientation"]
-    trans = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            transforms.Resize((224, 224)),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[
-                                 0.229, 0.224, 0.225]),
-        ]
-    )
+    trans = SteerTransform
 
     for i in tqdm(
         range(cfg["model"]["past_steps"] + 1,
@@ -96,8 +110,6 @@ def create_video(route_path: str, output_path: str, model_path: str, max_frames=
 
 
 if __name__ == "__main__":
-    torch._dynamo.config.suppress_errors = True
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-m",
