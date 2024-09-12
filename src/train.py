@@ -16,14 +16,18 @@ batch_size = 64
 
 max_lr = 3e-3
 min_lr = max_lr * 0.02
-warmup_iters = 100
+warmup_iters = 50  # 3% of total iters
 learning_rate = min_lr
 
 eval_iters = 5
 eval_interval = 100
-max_iters = 900  # 4 epochs
-# dataset len is 147389, with batch size 16 it takes ~9000 iters
-# 20% of the dataset is 29477, with a batch size of 64 it takes ~ 500 iters for an epoch
+max_iters = 1800  # 4 epochs
+
+# python3 ./src/prepare.py --split
+
+# dataset size: ~147389; use only 20%: 29477
+# with batch size 64 => ~450 per epoch
+# if it takes 10s/iter => 5 hours for 4 epochs (~2.5$)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
