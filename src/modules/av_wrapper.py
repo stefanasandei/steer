@@ -121,8 +121,12 @@ class AVWrapper(nn.Module):
             steering_angle = y_hat[:, -1, 0]
             speed = y_hat[:, -1, 1]
 
-        loss_future_path = torch.sqrt(F.mse_loss(
-            future_path, targets["future_path"]))
+        # use L1 loss as we want to treat all errors equally
+        # path data is not precise and we don't want to predict same exact coords
+        # also in the beggining, curves throw off the model
+        loss_future_path = F.l1_loss(
+            future_path, targets["future_path"])
+
         loss_steering_angle = F.mse_loss(
             steering_angle, targets["steering_angle"])
         loss_speed = F.mse_loss(
