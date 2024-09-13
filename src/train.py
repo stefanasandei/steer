@@ -12,22 +12,28 @@ from lib.lr import get_lr
 
 # hyperparameters
 seed = 42
-batch_size = 64
+batch_size = 32
 
-max_lr = 3e-3
-min_lr = max_lr * 0.02
+max_lr = 1e-3
+min_lr = max_lr * 0.01
 warmup_iters = 50  # 3% of total iters
 learning_rate = min_lr
 
 eval_iters = 5
 eval_interval = 100
-max_iters = 1800  # 4 epochs
+max_iters = 1800
 
 # python3 ./src/prepare.py --split
 
 # dataset size: ~147389; use only 20%: 29477
 # with batch size 64 => ~450 per epoch
 # if it takes 10s/iter => 5 hours for 4 epochs (~2.5$)
+
+# use 4%: 5895 and batch size 32
+# results in 184 iters/epoch
+# aka ~10 epochs for 1800 iters (0.39$)
+
+# or 2% of dataset with batch of 32 => 19 epochs
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -39,7 +45,7 @@ torch.manual_seed(seed)
 
 # data
 train_dataset = CommaDataset(
-    cfg["data"]["path"], chunk_num=1, train=True, device=device, dataset_percentage=10
+    cfg["data"]["path"], chunk_num=1, train=True, device=device, dataset_percentage=2
 )
 val_dataset = CommaDataset(
     cfg["data"]["path"], chunk_num=1, train=False, device=device, dataset_percentage=100
@@ -49,6 +55,10 @@ train_dataloader = DataLoader(
 val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
 
 torch.set_float32_matmul_precision("high")
+
+print(f"total iters: {max_iters}\ndataset size: {len(train_dataset)}")
+print(
+    f"iters per epoch: {len(train_dataset)//batch_size}\ntotal epochs: {max_iters//(len(train_dataset)//batch_size)}")
 
 # model
 model = SteerNetWrapped(device, return_dict=False)
