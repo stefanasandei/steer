@@ -1,5 +1,5 @@
 {
-  "path": "../comma2k19",
+  "path": "/mnt/e/steer/comma2k19",
   "num_chunks": 1,
   "split": 0.8,
   "multiprocess_routes": true,

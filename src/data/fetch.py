@@ -12,6 +12,7 @@ import random
 import os
 
 from tqdm import tqdm
+import numpy as np
 
 from data.process import process_chunk
 from config import cfg
@@ -174,11 +175,26 @@ def good_frames_from_route(
     if len(all_frames) < (past_steps + future_steps + 1):
         return []
 
+    # load velocities
+    can_data = np.load(f"{route_path}/can_telemetry.npz")
+    velocities = can_data["speed"]
+
     # remove frames with not enough previous & future info
     all_frames = all_frames[past_steps:-future_steps]
 
+    # remove frames with speed < 10 m/s
+    min_speed = 10.0
+    good_frames = []
+    for idx, frame in enumerate(all_frames):
+        avg_speed = np.mean(
+            velocities[idx + 1: idx + 1 + future_steps])
+        if avg_speed < min_speed:
+            continue
+
+        good_frames.append(frame)
+
     frame_paths = [
-        f"{route_path}/video/{(str(frame).zfill(6) + '.jpeg')}" for frame in all_frames
+        f"{route_path}/video/{(str(frame).zfill(6) + '.jpeg')}" for frame in good_frames
     ]
 
     return frame_paths

@@ -12,16 +12,16 @@ from lib.lr import get_lr
 
 # hyperparameters
 seed = 42
-batch_size = 32
+batch_size = 4
 
-max_lr = 1e-3
-min_lr = max_lr * 0.01
+max_lr = 5e-3
+min_lr = max_lr * 0.02
 warmup_iters = 50  # 3% of total iters
 learning_rate = min_lr
 
 eval_iters = 5
 eval_interval = 100
-max_iters = 1800
+max_iters = 1000
 
 # python3 ./src/prepare.py --split
 
@@ -38,7 +38,7 @@ max_iters = 1800
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 run_name = "steer"
-out_dir = f"../runs"  # save models in /workspace/runs/
+out_dir = f"/mnt/e/steer/"  # save models in /workspace/runs/
 # repo in /workspace/steer; dataset in /workspace/comma2k19
 
 torch.manual_seed(seed)
