@@ -45,8 +45,8 @@ class AVWrapper(nn.Module):
             {
                 "future_path": nn.Sequential(
                     nn.LazyLinear(
-                        64
-                    ), nn.GELU(), nn.Linear(64, 3*num_future_steps)
+                        128
+                    ), nn.GELU(), nn.Linear(128, 3*num_future_steps)
                 ),  # (x, y, z) for T future steps
                 # in radians
                 # "steering_angle": nn.LazyLinear(1),
@@ -129,6 +129,7 @@ class AVWrapper(nn.Module):
 
         loss_steering_angle = F.mse_loss(
             steering_angle, targets["steering_angle"])
+
         loss_speed = F.mse_loss(
             speed, targets["speed"])
 

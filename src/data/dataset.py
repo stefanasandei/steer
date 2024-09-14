@@ -4,7 +4,6 @@ The dataset class used to access elements.
 
 import torch
 from torch.utils.data import Dataset
-import torchvision.transforms as transforms
 import pickle
 import numpy as np
 from PIL import Image
@@ -35,8 +34,11 @@ class CommaDataset(Dataset):
             self.frame_paths = pickle.load(f)
 
         # used to reduce dataset size, for better training on low end devices
-        self.frame_paths = self.frame_paths[:int(
-            len(self.frame_paths)*dataset_percentage/100.0)]
+        new_dataset_len = int(
+            len(self.frame_paths)*dataset_percentage/100.0)
+        print(
+            f"using {new_dataset_len}/{len(self.frame_paths)} frames for training")
+        self.frame_paths = self.frame_paths[:new_dataset_len]
 
         # the parent dir of the parent dir
         self.get_route_path = (
@@ -91,7 +93,6 @@ class CommaDataset(Dataset):
         past_frames = torch.stack(past_frames).to(self.device).float()
 
         # 3. load can data (speed & steering angle)
-        # todo: maybe return past_seq_len can data?
         can_data = np.load(f"{route_path}can_telemetry.npz")
         speed = torch.tensor(
             can_data["speed"][frame_id], device=self.device, dtype=torch.float32
