@@ -2,7 +2,6 @@
 Create a video using reference data or predictions.
 """
 
-from torchvision import transforms
 import cv2
 import numpy as np
 from tqdm import tqdm
@@ -16,10 +15,12 @@ from modules.model import PilotNetWrapped, Seq2SeqWrapped, SteerNetWrapped
 from config import cfg
 from modules.steer import SteerTransform
 
+
 def is_codec_available(codec: str) -> bool:
     try:
         fourcc = cv2.VideoWriter.fourcc(*codec)
-        temp_video = cv2.VideoWriter('temp.mp4', fourcc, 30, (640, 480), isColor=True)
+        temp_video = cv2.VideoWriter(
+            'temp.mp4', fourcc, 30, (640, 480), isColor=True)
 
         val = temp_video.isOpened()
         temp_video.release()
@@ -27,6 +28,7 @@ def is_codec_available(codec: str) -> bool:
         return val
     except:
         return False
+
 
 def create_debug_video(route_path: str, output_path: str, max_frames=1200):
     codec = "h264"
@@ -48,6 +50,7 @@ def create_debug_video(route_path: str, output_path: str, max_frames=1200):
         out.write(img)
 
     out.release()
+
 
 @torch.no_grad
 def create_video(route_path: str, output_path: str, model_path: str, max_frames=1200):

@@ -5,6 +5,7 @@ Functions to draw stuff onto frames to visualize model outputs
 import cv2
 import numpy as np
 from typing import TypedDict
+import PIL
 
 from lib.camera import img_from_device, denormalize, FULL_FRAME_SIZE
 import lib.orientation as orient
@@ -15,6 +16,16 @@ FrameData = TypedDict('FrameData', {
 CANData = TypedDict("CANData", {
     "speed": np.ndarray, "angle": np.ndarray
 })
+
+
+def adjust_gamma(image: PIL.Image, gamma: float) -> PIL.Image:
+    # build a lookup table mapping the pixel values [0, 255] to
+    # their adjusted gamma values
+    invGamma = 1.0 / gamma
+    table = np.array([((i / 255.0) ** invGamma) * 255
+                      for i in np.arange(0, 256)]).astype("uint8")
+    # apply gamma correction using the lookup table
+    return cv2.LUT(image, table)
 
 
 def draw_path(img: np.ndarray, path: np.ndarray, shape_props={
@@ -76,6 +87,7 @@ def draw_text(img: np.ndarray, text: str, origin: tuple[int, int]):
 def draw_frame(img: np.ndarray, path: np.ndarray, speed: float, steering_angle: float) -> np.ndarray:
     img = cv2.resize(img, FULL_FRAME_SIZE,
                      interpolation=cv2.INTER_LINEAR)
+    img = adjust_gamma(img, gamma=1.2)
 
     # draw future path
     draw_path(img, path)
@@ -109,6 +121,7 @@ def draw_debug_frame(frame_data: FrameData, can_data: CANData, route_path: str, 
 
     img = cv2.imread(f'{route_path}/video/{str(index).zfill(6)}.jpeg')
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = adjust_gamma(img, gamma=1.2)
 
     img = draw_frame(img, target_frames, speed, angle)
 

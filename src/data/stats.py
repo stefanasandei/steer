@@ -61,8 +61,9 @@ class Stats:
             wandb.log(data)
         else:
             # log to stdout
-            print(
-                f"iter {self.iter}; loss={loss:.2f}; lr={lr}; time={dt*1000:.1f}ms")
+            if self.iter % 20 == 0:
+                print(
+                    f"iter {self.iter}; loss={loss:.2f}; lr={lr}; time={dt*1000:.1f}ms")
 
     def plot_loss(self):
         plt.plot(self.losses)

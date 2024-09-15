@@ -21,7 +21,7 @@ learning_rate = min_lr
 
 eval_iters = 5
 eval_interval = 100
-max_iters = 1000
+max_iters = 370 * 10
 
 # python3 ./src/prepare.py --split
 
@@ -38,7 +38,7 @@ max_iters = 1000
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 run_name = "steer"
-out_dir = f"/mnt/e/steer/"  # save models in /workspace/runs/
+out_dir = f"/mnt/e/steer/runs"  # save models in /workspace/runs/
 # repo in /workspace/steer; dataset in /workspace/comma2k19
 
 torch.manual_seed(seed)
@@ -124,4 +124,4 @@ for iter, (train_features, train_labels) in enumerate(cycle(train_dataloader)):
 print(f"Finished training. Saving to {out_dir}/{stats.architecture}.pt")
 torch.save(model.state_dict(), f"{out_dir}/{stats.architecture}.pt")
 
-# stats.plot_loss()
+stats.plot_loss()
