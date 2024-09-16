@@ -14,9 +14,9 @@ from lib.lr import get_lr
 seed = 42
 batch_size = 4
 
-max_lr = 5e-3
-min_lr = max_lr * 0.02
-warmup_iters = 50  # 3% of total iters
+max_lr = 1e-3
+min_lr = 5e-5
+warmup_iters = 200  # 3% of total iters
 learning_rate = min_lr
 
 eval_iters = 5
@@ -101,7 +101,7 @@ for iter, (train_features, train_labels) in enumerate(cycle(train_dataloader)):
     optimizer.zero_grad()
     scaler.scale(loss).backward()
     scaler.unscale_(optimizer)
-    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+    # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
     scaler.step(optimizer)
     scaler.update()
 
@@ -124,4 +124,4 @@ for iter, (train_features, train_labels) in enumerate(cycle(train_dataloader)):
 print(f"Finished training. Saving to {out_dir}/{stats.architecture}.pt")
 torch.save(model.state_dict(), f"{out_dir}/{stats.architecture}.pt")
 
-stats.plot_loss()
+# stats.plot_loss()
