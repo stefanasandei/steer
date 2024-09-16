@@ -59,6 +59,8 @@ The first model is based on the PilotNet architecture. It has two main component
 
 The sequence to sequence model is composed of an encoder and a decoder. The encoder has a RegNet at its code, which extracts image features. These features are computed for each frame in the sequence, and after they are concatenated with the past path, they are passed to the decoder. The decoder uses a GRU network to process the sequence and make predictions. Thanks to its sequential nature, the decoder can extract spatial information and make better predictions.
 
+[steer-15-09-2024-r3.webm](https://github.com/user-attachments/assets/f9702535-d440-406e-81ac-6f1424419517)
+
 ## license
 
 [Apache 2](LICENSE) © 2024 [Asandei Stefan-Alexandru](https://asandei.com). All rights reserved.
