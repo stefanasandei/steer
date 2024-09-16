@@ -50,8 +50,8 @@ Debug information projected into a sample frame from the dataset.
 **model** | **loss** | **epochs** | **batch size** | **frames ctx**
 :--------:|:--------:|:----------:|:--------------:|:-------------:
  PilotNet |  29.70   |     4      |       4        |     10/30
- Seq2Seq  |   7.16   |     4      |       4        |     10/30
-**Steer** |  151.80  |     4      |       4        |     10/30
+ Seq2Seq  |  151.80  |     4      |       4        |     10/30
+**Steer** |   7.16   |     4      |       4        |     10/30
 
 The presented model is **Steer**, however for comparison, also PilotNet and Seq2Seq models have been developed.
 
