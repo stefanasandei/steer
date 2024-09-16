@@ -14,8 +14,8 @@ from lib.lr import get_lr
 seed = 42
 batch_size = 4
 
-max_lr = 1e-3
-min_lr = 5e-5
+max_lr = 5e-3
+min_lr = 1e-5
 warmup_iters = 200  # 3% of total iters
 learning_rate = min_lr
 

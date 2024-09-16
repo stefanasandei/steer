@@ -61,9 +61,9 @@ class SteerNet(nn.Module):
             # use a much smaller mamba encoder block, and use
             # two linear layers two project into right dims
             # note: first merge last two dims of past_xyz
-            nn.Linear(n_frames * 3, embd_dim // 3, bias=False),
-            BlockList(n_layers=depth // 2, n_hidden=embd_dim // 3),
-            nn.Linear(embd_dim // 3, embd_dim, bias=False),
+            nn.Linear(n_frames * 3, embd_dim // 6, bias=False),
+            BlockList(n_layers=depth // 2, n_hidden=embd_dim // 6),
+            nn.Linear(embd_dim // 6, embd_dim, bias=False),
         )
 
         # final head to output hidden features
