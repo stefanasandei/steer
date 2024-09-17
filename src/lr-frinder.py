@@ -66,9 +66,9 @@ for iter, (train_features, train_labels) in enumerate(cycle(train_dataloader)):
         lossi.append(1000.0)
     print(f"iter {iter}: loss={loss.item():.2f}, lr={lr_values[iter]}")
 
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(10, 5))
 plt.xlabel("learning rate exponent")
 plt.ylabel("loss value")
 plt.plot(lri, lossi)
-plt.savefig("lr")
+plt.savefig("lr.pdf", bbox_inches='tight')
 plt.show()
