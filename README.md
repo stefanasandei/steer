@@ -7,7 +7,9 @@
     open-source autonomous vehicle software&nbsp | <a href="https://asandei.com"> website</a>&nbsp
 <br>
 
-This repository contains training and inference code for the Steer family of models. These are end-to-end neural networks for self driving.
+This repository contains training and inference code for the Steer family of models. These are end-to-end neural networks for self driving, based on the Mamba architecture.
+
+Note: as of september 2024 these neural networks are undertrained, being trained only on a consumer-level gpu; work in progress due to the lack of funds
 
 ## dependencies
 
@@ -63,7 +65,7 @@ The dataset used is comma2k19, by Comma AI. It consists of 2019 segments of reco
  Seq2Seq  |  151.80  |     4      |       4        |     10/30
 **Steer** | **7.16** |   **4**    |     **4**      |   **10/30**
 
-The presented model is **Steer**, however for comparison, also PilotNet and Seq2Seq models have been developed.
+The presented model is **Steer**, however for comparison, also PilotNet and Seq2Seq models have been developed. Note: the small number of epochs and the batch is due to the hardware limitations.
 
 Steer is an end-to-end neural network based on the Mamba architecture. It takes as input a sequence of N past frames and N past xyz positions. The frames are converted into patches and processed through a series of Mamba bidirectional blocks. These features are then fed into a video encoder to compute a hidden state. Simultaneously, the past positions are passed through a path encoder, also utilizing Mamba blocks to generate another hidden state. The two hidden states are combined and passed through a final MLP head to produce the final features.
 
