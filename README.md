@@ -9,7 +9,7 @@
 
 This repository contains training and inference code for the Steer family of models. These are end-to-end neural networks for self driving, based on the Mamba architecture.
 
-Note: as of september 2024 these neural networks are undertrained, being trained only on a consumer-level gpu; work in progress due to the lack of funds
+Note: this project is for educational purposes only, the models are undertrained due to hardware restraints.
 
 ## dependencies
 
@@ -72,6 +72,8 @@ Steer is an end-to-end neural network based on the Mamba architecture. It takes 
 The first comparison model is based on the PilotNet architecture, comprising two main components: a series of convolutional layers and feed-forward layers functioning as a controller. The frames are concatenated and processed by the convolutional layers, after which the features are combined with the past path data. The resulting tensor is passed through linear layers, branching into multiple output layers to generate predictions. This model effectively estimated steering angles and vehicle speed but struggled with accurate path prediction, likely due to its lack of temporal feature integration. Nevertheless, it understood that the vehicle would move primarily in a forward direction.
 
 The Seq2Seq model consists of an encoder and a decoder. The encoder, built around a RegNet, extracts image features from each frame in the sequence. These features, after being concatenated with past path data, are passed to the decoder. The decoder, utilizing a GRU network, processes the sequence and generates predictions. Its sequential structure enables it to capture spatial information and make more accurate predictions.
+
+All models were trained on 4 epochs on only 2% of the first chunk of the dataset. The main model is able to determine when to drive forward, stop at a semaphore and speed up again. This proves its potential, however my available hardware limits the amount of training as well as other hyperparameters (batch size, dataset usage, epochs, model size). Because of this, I focused on the educational value of this repository. 
 
 ## license
 
