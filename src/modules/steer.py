@@ -177,6 +177,10 @@ class VideoPatchEmbedding(nn.Module):
         x = torch.cat((cls_token, x), dim=1)
         # basically (B*T, H*W+1, C); add a prefix token
 
+        # (120, 197, 192); (197, 192); (1, 30, 192)
+        # (B*T, W*H+1, C); (W*H+1, C); (1, T, C)
+        # (x.shape, self.pos_embd.shape, self.temp_embd.shape)
+
         # 2. positional embedding
         # same shape: (B*T, H*W+1, C)
         x = x + self.pos_embd  # just add the spatial info
@@ -190,6 +194,9 @@ class VideoPatchEmbedding(nn.Module):
         # re-add the classification token
         x = torch.cat((cls_tokens, x), dim=1)
         # (B, T', C); new linear sequence of embedding tokens
+
+        # T' = 5881 = 30 * (224/16) * (224/16) + 1 (cls token)
+        # = T * (H/P) * (W/P); and C = 192; embedding size
 
         x = self.drop(x)
         return x
@@ -306,8 +313,8 @@ SteerTransform = transforms.Compose(
 
 # let's test the model
 if __name__ == "__main__":
-    B, T, HW = 8, 30, 224
-    past_frames = torch.randn((B, 3, T, HW, HW), device="cuda")
+    B, T, HW = 4, 30, 224
+    past_frames = torch.randn((B, T, 3, HW, HW), device="cuda")
     past_xyz = torch.randn((B, T, 3), device="cuda")
 
     model = SteerNet(n_frames=T, img_size=HW).to("cuda")
