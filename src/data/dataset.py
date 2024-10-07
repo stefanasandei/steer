@@ -36,8 +36,8 @@ class CommaDataset(Dataset):
         # used to reduce dataset size, for better training on low end devices
         new_dataset_len = int(
             len(self.frame_paths)*dataset_percentage/100.0)
-        print(
-            f"using {new_dataset_len}/{len(self.frame_paths)} frames for training")
+        # print(
+        #     f"using {new_dataset_len}/{len(self.frame_paths)} frames for training")
         self.frame_paths = self.frame_paths[:new_dataset_len]
 
         # the parent dir of the parent dir
