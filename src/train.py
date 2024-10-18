@@ -14,14 +14,17 @@ from lib.lr import get_lr
 seed = 42
 batch_size = 4
 
+steps_per_epoch = 800
+epochs = 10
+
 max_lr = 5e-3
 min_lr = 1e-5
-warmup_iters = 200  # 3% of total iters
+warmup_iters = steps_per_epoch * epochs * 3 // 100  # 3% of total iters
 learning_rate = min_lr
 
 eval_iters = 5
 eval_interval = 100
-max_iters = 370 * 10
+max_iters = steps_per_epoch * epochs
 
 # python3 ./src/prepare.py --split
 
@@ -37,7 +40,7 @@ max_iters = 370 * 10
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-run_name = "steer"
+run_name = "steer-curv"
 out_dir = f"/mnt/e/steer/runs"  # save models in /workspace/runs/
 # repo in /workspace/steer; dataset in /workspace/comma2k19
 
@@ -101,7 +104,8 @@ for iter, (train_features, train_labels) in enumerate(cycle(train_dataloader)):
     optimizer.zero_grad()
     scaler.scale(loss).backward()
     scaler.unscale_(optimizer)
-    # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+    if iter > 100:
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
     scaler.step(optimizer)
     scaler.update()
 

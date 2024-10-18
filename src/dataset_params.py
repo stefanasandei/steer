@@ -7,7 +7,7 @@ from config import cfg
 
 # params
 batch_size = 4
-dataset_percentage = 10
+dataset_percentage = 2
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 

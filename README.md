@@ -9,6 +9,8 @@
 
 This repository contains training and inference code for the Steer family of models. These are end-to-end neural networks for self driving, based on the Mamba architecture.
 
+Read the [technical report](./notebooks/report.pdf) for more details regarding the research process, architecture details and findings.
+
 Note: this project is for educational purposes only, the models are undertrained due to hardware restraints.
 
 ## dependencies
@@ -35,7 +37,7 @@ To download & preprocess the dataset, run:
 python3 ./src/prepare.py
 ```
 
-To start training the model:
+To start training the model (edit the parameters within the script file):
 
 ```
 python3 ./src/train.py
@@ -74,6 +76,20 @@ The first comparison model is based on the PilotNet architecture, comprising two
 The Seq2Seq model consists of an encoder and a decoder. The encoder, built around a RegNet, extracts image features from each frame in the sequence. These features, after being concatenated with past path data, are passed to the decoder. The decoder, utilizing a GRU network, processes the sequence and generates predictions. Its sequential structure enables it to capture spatial information and make more accurate predictions.
 
 All models were trained on 4 epochs on only 2% of the first chunk of the dataset. The main model is able to determine when to drive forward, stop at a semaphore and speed up again. This proves its potential, however my available hardware limits the amount of training as well as other hyperparameters (batch size, dataset usage, epochs, model size). Because of this, I focused on the educational value of this repository. 
+
+## citation
+
+If you use this material, please cite this repository with the following:
+
+```bibtex
+@misc{asandei_efficient_2024,
+  author       = {Asandei Ștefan-Alexandru},
+  title        = {Efficient temporal awareness for autonomous vehicles using State Space Models},
+  year         = 2024,
+  publisher    = {Github},
+  url          = {https://github.com/stefanasandei/steer},
+}
+```
 
 ## license
 
