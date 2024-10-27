@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-    open-source autonomous vehicle software&nbsp | <a href="https://asandei.com"> website</a>&nbsp
+    open-source autonomous vehicle software&nbsp | <a href="https://steer.asandei.com"> website</a>&nbsp
 <br>
 
 Proof of concept work for utilizing Mamba based models for self driving. 
@@ -46,7 +46,7 @@ python3 ./src/train.py
 To generate a video using model predictions:
 
 ```
-python3 --model steer.pt --route 2018-07-29--16-37-17 --out out.mp4
+python3 ./src/video --model steer.pt --route 2018-07-29--16-37-17 --out out.mp4
 ```
 
 [steer-15-09-2024-r3.webm](https://github.com/user-attachments/assets/f9702535-d440-406e-81ac-6f1424419517)
@@ -65,7 +65,7 @@ The dataset used is comma2k19, by Comma AI. It consists of 2019 segments of reco
 :--------:|:--------:|:--------------:|:----------:|:-----------:
  PilotNet |  29.70   |      0.8M      |    119     |     CNN
  Seq2Seq  |  151.80  |      5.9M      |    9417    | RegNet + GRU
-**Steer** | **7.16** |    **6.4M**    |  **5130**  |     ViM
+**Steer** | **7.16** |    **6.4M**    |  **5130**  |   **ViM**
 
 The presented model is **Steer**, however for comparison, also PilotNet and Seq2Seq models have been trained. Note: the small number of epochs (~4) and the batch size (4) is due to the hardware limitations.
 
