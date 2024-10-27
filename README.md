@@ -7,7 +7,7 @@
     open-source autonomous vehicle software&nbsp | <a href="https://asandei.com"> website</a>&nbsp
 <br>
 
-This repository contains training and inference code for the Steer family of models. These are end-to-end neural networks for self driving, based on the Mamba architecture.
+Proof of concept work for utilizing Mamba based models for self driving. 
 
 Read the [technical report](./notebooks/report.pdf) for more details regarding the research process, architecture details and findings.
 
@@ -61,15 +61,15 @@ The dataset used is comma2k19, by Comma AI. It consists of 2019 segments of reco
 
 ## training
 
-**model** | **loss** | **epochs** | **batch size** | **frames ctx**
-:--------:|:--------:|:----------:|:--------------:|:-------------:
- PilotNet |  29.70   |     4      |       4        |     10/30
- Seq2Seq  |  151.80  |     4      |       4        |     10/30
-**Steer** | **7.16** |   **4**    |     **4**      |   **10/30**
+**model** | **loss** | **parameters** | **MFLOPs** | **backbone**
+:--------:|:--------:|:--------------:|:----------:|:-----------:
+ PilotNet |  29.70   |      0.8M      |    119     |     CNN
+ Seq2Seq  |  151.80  |      5.9M      |    9417    | RegNet + GRU
+**Steer** | **7.16** |    **6.4M**    |  **5130**  |     ViM
 
-The presented model is **Steer**, however for comparison, also PilotNet and Seq2Seq models have been developed. Note: the small number of epochs and the batch is due to the hardware limitations.
+The presented model is **Steer**, however for comparison, also PilotNet and Seq2Seq models have been trained. Note: the small number of epochs (~4) and the batch size (4) is due to the hardware limitations.
 
-Steer is an end-to-end neural network based on the Mamba architecture. It takes as input a sequence of N past frames and N past xyz positions. The frames are converted into patches and processed through a series of Mamba bidirectional blocks. These features are then fed into a video encoder to compute a hidden state. Simultaneously, the past positions are passed through a path encoder, also utilizing Mamba blocks to generate another hidden state. The two hidden states are combined and passed through a final MLP head to produce the final features.
+Steer is an end-to-end neural network based on the Mamba architecture. It takes as input a sequence of N past frames and N past xyz positions (in local frame coordonates). The frames are converted into patches and processed through a series of Mamba bidirectional blocks. These features are then fed into a video encoder to compute a hidden state. Simultaneously, the past positions are passed through a path encoder, also utilizing Mamba blocks to generate another hidden state. The two hidden states are combined and passed through a final MLP head to produce the final features.
 
 The first comparison model is based on the PilotNet architecture, comprising two main components: a series of convolutional layers and feed-forward layers functioning as a controller. The frames are concatenated and processed by the convolutional layers, after which the features are combined with the past path data. The resulting tensor is passed through linear layers, branching into multiple output layers to generate predictions. This model effectively estimated steering angles and vehicle speed but struggled with accurate path prediction, likely due to its lack of temporal feature integration. Nevertheless, it understood that the vehicle would move primarily in a forward direction.
 
