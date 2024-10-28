@@ -132,7 +132,9 @@ def split_chunk(chunk_dir: str):
         pickle.dump(val_files, f)
 
 
-def select_frames(routes: str) -> list[str]:
+def select_frames(routes: str) -> list[tuple[str, str]]:
+    # return a list of (image_path, curvature_score)
+
     frame_results = []
 
     # for each route choose valid images
@@ -178,6 +180,7 @@ def good_frames_from_route(
     # load velocities
     can_data = np.load(f"{route_path}/can_telemetry.npz")
     velocities = can_data["speed"]
+    steering_angles = can_data["angle"]
 
     # remove frames with not enough previous & future info
     all_frames = all_frames[past_steps:-future_steps]
@@ -193,8 +196,18 @@ def good_frames_from_route(
 
         good_frames.append(frame)
 
-    frame_paths = [
-        f"{route_path}/video/{(str(frame).zfill(6) + '.jpeg')}" for frame in good_frames
-    ]
+    data_split = []
 
-    return frame_paths
+    # create the packages for the good frames
+    for idx, frame in enumerate(good_frames):
+        # compute the curvature score
+        # used to sample routes with more turns more often
+        # aka we don't want our model to only see straight roads
+        curv_score = np.mean(
+            np.abs(steering_angles[idx: idx + future_steps]))
+
+        frame_path = f"{route_path}/video/{(str(frame).zfill(6) + '.jpeg')}"
+
+        data_split.append((frame_path, curv_score))
+
+    return data_split

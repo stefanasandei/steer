@@ -21,6 +21,7 @@ class CommaDataset(Dataset):
 
         self.path = f"{path}/Chunk_{chunk_num}"
         self.frame_paths = []
+        self.curv_scores = []
         self.device = device
 
         # make sure we have the dataset processed
@@ -31,14 +32,15 @@ class CommaDataset(Dataset):
         # from one frame we can access past&future info
         split_path = f"{self.path}/train" if train else f"{self.path}/train"
         with open(split_path, "rb") as f:
-            self.frame_paths = pickle.load(f)
+            self.data_split = pickle.load(f)
 
         # used to reduce dataset size, for better training on low end devices
         new_dataset_len = int(
-            len(self.frame_paths)*dataset_percentage/100.0)
-        # print(
-        #     f"using {new_dataset_len}/{len(self.frame_paths)} frames for training")
-        self.frame_paths = self.frame_paths[:new_dataset_len]
+            len(self.data_split)*dataset_percentage/100.0)
+
+        self.data_split = self.data_split[:new_dataset_len]
+        self.frame_paths = [elem[0] for elem in self.data_split]
+        self.curv_scores = [elem[1] for elem in self.data_split]
 
         # the parent dir of the parent dir
         self.get_route_path = (
@@ -51,7 +53,7 @@ class CommaDataset(Dataset):
         self.frame_transform = SteerTransform
 
     def __len__(self):
-        return len(self.frame_paths)
+        return len(self.data_split)
 
     def __getitem__(self, idx) -> torch.Tensor:
         past_seq_len = cfg["model"]["past_steps"]
@@ -117,8 +119,13 @@ def get_data(is_train: bool, batch_size: int, device: str, dataset_percentage: i
         dataset_percentage=dataset_percentage
     )
 
-    # todo
-    sampler = None
+    # convert the curvature scores to weights
+    curv = torch.tensor(dataset.curv_scores,
+                        dtype=torch.float32, device=device)
+    curv = curv / curv.sum()
+
+    sampler = WeightedRandomSampler(
+        weights=curv, num_samples=len(dataset), replacement=True)
 
     dataloader = DataLoader(
         dataset, batch_size=batch_size, sampler=sampler if is_train else None,
