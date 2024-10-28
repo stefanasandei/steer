@@ -22,7 +22,7 @@ warmup_iters = steps_per_epoch * epochs * 3 // 100  # 3% of total iters
 learning_rate = min_lr
 
 eval_iters = 5
-eval_interval = 100
+eval_interval = 300
 max_iters = steps_per_epoch * epochs
 
 # python3 ./src/prepare.py --split

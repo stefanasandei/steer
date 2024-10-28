@@ -7,7 +7,7 @@ from config import cfg
 
 # params
 batch_size = 4
-dataset_percentage = 2
+dataset_percentage = 4
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -21,7 +21,7 @@ train_dataloader = DataLoader(
 
 def iters_to_time(iters: int, per_batch: float = 0.177) -> float:
     # per_batch = 0.089 # pilotnet
-    sec_per_iter = per_batch*batch_size
+    sec_per_iter = per_batch * batch_size
     sec = iters * sec_per_iter
     hours = sec / 3600.0
     return hours

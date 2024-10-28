@@ -43,6 +43,8 @@ To start training the model (edit the parameters within the script file):
 python3 ./src/train.py
 ```
 
+Use the `./src/estimate.py` script to get an approximate training time. First run a couple of forward passes and edit the time constants (`sec_per_iter`). 
+
 To generate a video using model predictions:
 
 ```
