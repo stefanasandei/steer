@@ -1,10 +1,9 @@
 import torch
-from torch.utils.data import DataLoader
 import torch.nn.functional as F
 import torch.amp as amp
 
 from data.stats import Stats
-from data.dataset import CommaDataset, cycle
+from data.dataset import cycle, get_train_data, get_valid_data
 from config import cfg
 from modules.model import SteerNetWrapped, PilotNetWrapped, Seq2SeqWrapped
 from eval import get_val_loss
@@ -47,15 +46,8 @@ out_dir = f"/mnt/e/steer/runs"  # save models in /workspace/runs/
 torch.manual_seed(seed)
 
 # data
-train_dataset = CommaDataset(
-    cfg["data"]["path"], chunk_num=1, train=True, device=device, dataset_percentage=2
-)
-val_dataset = CommaDataset(
-    cfg["data"]["path"], chunk_num=1, train=False, device=device, dataset_percentage=100
-)
-train_dataloader = DataLoader(
-    train_dataset, batch_size=batch_size, shuffle=True)
-val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
+train_dataloader, train_dataset = get_train_data(device, batch_size)
+val_dataloader, _ = get_valid_data(device, batch_size)
 
 torch.set_float32_matmul_precision("high")
 

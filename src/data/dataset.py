@@ -3,7 +3,7 @@ The dataset class used to access elements.
 """
 
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
 import pickle
 import numpy as np
 from PIL import Image
@@ -111,8 +111,32 @@ class CommaDataset(Dataset):
         }
 
 
-# https://github.com/pytorch/pytorch/issues/23900
+def get_data(is_train: bool, batch_size: int, device: str, dataset_percentage: int = 100, chunk_num: int = 1) -> tuple[DataLoader, Dataset]:
+    dataset = CommaDataset(
+        cfg["data"]["path"], chunk_num=chunk_num, train=is_train, device=device,
+        dataset_percentage=dataset_percentage
+    )
+
+    # todo
+    sampler = None
+
+    dataloader = DataLoader(
+        dataset, batch_size=batch_size, sampler=sampler if is_train else None,
+        shuffle=True, num_workers=4, pin_memory=True)
+
+    return dataloader, dataset
+
+
+def get_train_data(device: str, batch_size: int, dataset_percentage: int = 2, chunk_num: int = 1) -> tuple[DataLoader, Dataset]:
+    return get_data(is_train=False, batch_size=batch_size, device=device, dataset_percentage=dataset_percentage, chunk_num=chunk_num)
+
+
+def get_valid_data(device: str, batch_size: int, dataset_percentage: int = 100, chunk_num: int = 1) -> tuple[DataLoader, Dataset]:
+    return get_data(is_train=True, batch_size=batch_size, device=device, dataset_percentage=dataset_percentage, chunk_num=chunk_num)
+
+
 def cycle(iterable):
+    # https://github.com/pytorch/pytorch/issues/23900
     iterator = iter(iterable)
     while True:
         try:

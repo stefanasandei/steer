@@ -30,7 +30,7 @@ def is_codec_available(codec: str) -> bool:
         return False
 
 
-def create_debug_video(route_path: str, output_path: str, max_frames=1200):
+def create_debug_video(route_path: str, output_path: str, max_frames=6000):
     codec = "h264"
     if not is_codec_available(codec):
         print(f"Codec {codec} not available! Can't write video.")
