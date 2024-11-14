@@ -7,11 +7,11 @@
     open-source autonomous vehicle software&nbsp | <a href="https://steer.asandei.com"> website</a>&nbsp
 <br>
 
-Proof of concept work for utilizing Mamba based models for self driving. 
+Proof of concept work for utilizing Mamba based models for self-driving. 
 
 Read the [technical report](./notebooks/report.pdf) for more details regarding the research process, architecture details and findings.
 
-Note: this project is for educational purposes only, the models are undertrained due to hardware restraints.
+Note: this project is for educational purposes only, the models are undertrained due to hardware restraints. Project licensed under Apache 2, please respect it.
 
 ## dependencies
 
